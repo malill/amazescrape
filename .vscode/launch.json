@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Scrapy: crawl amazon",
+            "type": "python",
+            "request": "launch",
+            "module": "scrapy",
+            "args": [
+                "crawl",
+                "amazon"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/amazescrape"
+        },
+        {
+            "name": "Scrapy: shell https://www.amazon.de/s?k=toaster",
+            "type": "python",
+            "request": "launch",
+            "module": "scrapy",
+            "args": [
+                "shell",
+                "https://www.amazon.de/s?k=toaster"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/amazescrape"
+        }
+    ]
+}
