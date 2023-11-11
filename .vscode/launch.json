@@ -11,7 +11,8 @@
                 "amazon"
             ],
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/amazescrape"
+            "cwd": "${workspaceFolder}/amazescrape",
+            "justMyCode": false
         },
         {
             "name": "Scrapy: shell https://www.amazon.de/s?k=toaster",
