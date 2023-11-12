@@ -1,3 +1,4 @@
+from datetime import datetime
 import scrapy
 from scrapy import Request
 from scrapy.http import Response
@@ -12,6 +13,9 @@ class AmazonSpider(scrapy.Spider):
     def start_requests(self) -> Request:
         urls = ["https://www.amazon.de/s?k=laptop"]
         for url in urls:
+            current_time = datetime.now()
+            formatted_time = current_time.strftime('%Y-%m-%d %H:%M:%S.%f')
+            self.request_timestamp = formatted_time
             yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response: Response) -> AmazonItem:
@@ -25,13 +29,31 @@ class AmazonSpider(scrapy.Spider):
 
     def load_amazon_item(self, response: Response) -> AmazonItem:
         item_loader = AmazonItemLoader(item=AmazonItem(), selector=response)
+
+        # Basic information
         item_loader.add_xpath("asin", "./@data-asin")
         item_loader.add_xpath("name", ".//h2//text()")
 
+        # Ratings
+        item_loader.add_xpath("rating_avg", ".//span[@class='a-icon-alt']/text()")
+        item_loader.add_xpath("rating_n", ".//span[@class='a-size-base s-underline-text']/text()")
+
+        # Price
+        item_loader.add_xpath("price", ".//span[@class='a-price']/span[@class='a-offscreen']/text()")
+        item_loader.add_xpath("price_strike", ".//span[@data-a-strike='true']/span/text()")
+
+        # Page ranking
+        item_loader.add_xpath("rank", "./@data-index")
+
         # Badges
         ## Top Badge
-        item_loader.add_xpath("top_badge", ".//span[contains(@class, 'badge-text')]/text()")
+        item_loader.add_xpath(
+            "status_badge", ".//span[@data-component-type='s-status-badge-component']//@data-component-props"
+        )
 
         ## Amazon Prime
         item_loader.add_xpath("prime", ".//i[contains(@class, 'a-icon-prime')]/@aria-label")
+
+        item_loader.add_value("current_timestamp", self.request_timestamp)
+
         return item_loader.load_item()

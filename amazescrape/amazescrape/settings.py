@@ -98,5 +98,5 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORTERS = {'csv': 'amazescrape.feed.CsvCustomSeperator'}
 FEED_EXPORT_ENCODING = "utf-8"
 FEEDS = {
-    'feed/amazon_item.csv': {'format': 'csv', 'encoding': 'utf8', 'item_classes': [AmazonItem], 'overwrite': False}
+    'feed/amazon_item.csv': {'format': 'csv', 'encoding': 'utf8', 'item_classes': [AmazonItem], 'overwrite': True}
 }
