@@ -138,3 +138,7 @@ venv.bak/
 *.code-workspace
 .history
 !.vscode/launch.json
+
+# Scrapy Feed
+*/feed/*
+!*/feed/.gitkeep

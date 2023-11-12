@@ -7,6 +7,9 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
+from amazescrape.items import AmazonItem
+
+
 BOT_NAME = "amazescrape"
 
 SPIDER_MODULES = ["amazescrape.spiders"]
@@ -64,9 +67,7 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-# ITEM_PIPELINES = {
-#    "amazescrape.pipelines.AmazescrapePipeline": 300,
-# }
+ITEM_PIPELINES = {"amazescrape.pipelines.AmazescrapePipeline": 300}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
@@ -92,4 +93,10 @@ ROBOTSTXT_OBEY = True
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
+
+# Feed configuration
+FEED_EXPORTERS = {'csv': 'amazescrape.feed.CsvCustomSeperator'}
 FEED_EXPORT_ENCODING = "utf-8"
+FEEDS = {
+    'feed/amazon_item.csv': {'format': 'csv', 'encoding': 'utf8', 'item_classes': [AmazonItem], 'overwrite': False}
+}

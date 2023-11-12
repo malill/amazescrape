@@ -3,10 +3,14 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/items.html
 
-import scrapy
+from dataclasses import dataclass, field
 
+@dataclass
+class AmazonItem:
+    # Basic info about the product
+    asin: str | None = field(default=None)
+    name: str | None = field(default=None)
 
-class AmazescrapeItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    # Badges
+    top_badge: str | None = field(default=None)
+    prime: str | None = field(default=None)

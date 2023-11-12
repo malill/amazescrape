@@ -1,13 +1,7 @@
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-
-
-# useful for handling different item types with a single interface
-from itemadapter import ItemAdapter
+from amazescrape.spiders.AmazonSpider import AmazonSpider
+from amazescrape.items import AmazonItem
 
 
 class AmazescrapePipeline:
-    def process_item(self, item, spider):
-        return item
+    def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
+        return amazon_item
