@@ -1,4 +1,8 @@
 import json
+from pathlib import PurePosixPath
+from urllib.parse import urlparse
+
+from scrapy.pipelines.images import ImagesPipeline
 from amazescrape.spiders.AmazonSpider import AmazonSpider
 from amazescrape.items import AmazonItem
 
@@ -30,11 +34,13 @@ class AmazonItemPipeline:
         return ''.join(filter(lambda x: x.isdigit(), price_str))
 
 
-class AmazonItemImagePipeline:
-    def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
-        print("Processing image for item: " + amazon_item.asin)
-        return amazon_item
+class AmazonImagePipeline(ImagesPipeline):
+    '''Pipeline for downloading images from Amazon.'''
 
-    def fix_image_url(self, image_url: str) -> str:
-        print("Fixing image URL: " + image_url)
-        return image_url.replace("._AC_", "._SX522_")
+    def file_path(self, request, response=None, info=None, *, item: AmazonItem = None):
+        '''Returns the file path for storing the image. The path is relative to the project root. The image is stored in
+        the `files` directory. The file name is the same as the original file name. The original file name is extracted
+        from the URL. The URL is the image URL from the scraped data.'''
+        original_file_name = PurePosixPath(urlparse(request.url).path).name
+        item.image_filename = original_file_name
+        return "files/" + original_file_name

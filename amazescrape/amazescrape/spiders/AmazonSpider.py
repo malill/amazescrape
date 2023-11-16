@@ -46,6 +46,7 @@ class AmazonSpider(scrapy.Spider):
         for search_result in search_results:
             amazon_item = self.load_amazon_search_item(search_result, scraping_info)
             product_url = search_result.xpath(".//h2//a[contains(@class, 'a-link-normal')]/@href")
+
             if product_url:
                 url = product_url[0].get()
                 if url is not None:
@@ -93,10 +94,16 @@ class AmazonSpider(scrapy.Spider):
                 "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-merchant-info'][2]//span//text()",
             )
 
-        return item_loader.load_item()
+        amazonItem = item_loader.load_item()
+        amazonItem.image_urls = [amazonItem.image_urls] # ImagePipeline expects a list
+
+        return amazonItem
 
     def load_amazon_search_item(self, response: Response, scraping_info: AmazonScrapingInfo) -> AmazonItem:
         item_loader = AmazonItemLoader(item=AmazonItem(), selector=response)
+
+        # Image URL (add as list)
+        item_loader.add_xpath("image_urls", ".//img[@class='s-image']/@src")
 
         # Scraping info
         if scraping_info:
@@ -132,5 +139,8 @@ class AmazonSpider(scrapy.Spider):
 
         ## Amazon Prime
         item_loader.add_xpath("prime", ".//i[contains(@class, 'a-icon-prime')]/@aria-label")
+
+        amazonItem = item_loader.load_item()
+        amazonItem.image_urls = [amazonItem.image_urls] # ImagePipeline expects a list
 
         return item_loader.load_item()

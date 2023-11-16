@@ -28,6 +28,11 @@ class AmazonItem:
     url: str | None = field(default=None)
     request_timestamp: datetime | None = field(default=None)
 
+    # Image
+    image_urls: list[str] | None = field(default=None)
+    images: None = field(default=None)
+    image_filename: str | None = field(default=None)
+
     # Basic info about the product
     asin: str | None = field(default=None)
     name: str | None = field(default=None)
@@ -54,7 +59,7 @@ class AmazonItem:
     pdp_title: str | None = field(default=None)
 
     # Buy box
-    fulfiller_id: str | None = field(default=None) # TODO: check if available
+    fulfiller_id: str | None = field(default=None)  # TODO: check if available
     fulfiller_name: str | None = field(default=None)  # "Versand", "Dispatches from"
     merchant_id: str | None = field(default=None)  # aka seller_id
     merchant_name: str | None = field(default=None)  # "Verkäufer", "Sold by"

@@ -74,7 +74,7 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {"amazescrape.pipelines.AmazonItemPipeline": 300}
+ITEM_PIPELINES = {"amazescrape.pipelines.AmazonImagePipeline": 200, "amazescrape.pipelines.AmazonItemPipeline": 300}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
@@ -104,7 +104,14 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 # Feed configuration
 FEED_EXPORTERS = {'csv': 'amazescrape.feed.CsvCustomSeperator'}
 FEED_EXPORT_ENCODING = "utf-8"
-FEEDS = {'../res/feed/amazon_item.csv': {'format': 'csv', 'encoding': 'utf8', 'item_classes': [AmazonItem], 'overwrite': True}}
+FEEDS = {
+    '../res/feed/amazon_item.csv': {
+        'format': 'csv',
+        'encoding': 'utf8',
+        'item_classes': [AmazonItem],
+        'overwrite': True,
+    }
+}
 
 # Images configuration
 IMAGES_STORE = "../res/images"
