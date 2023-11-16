@@ -139,6 +139,10 @@ venv.bak/
 .history
 !.vscode/launch.json
 
-# Scrapy Feed
+# Scrapy feed exports
 */feed/*
 !*/feed/.gitkeep
+
+# Scrapy images
+*/images/*
+!*/images/.gitkeep

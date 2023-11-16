@@ -104,4 +104,7 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 # Feed configuration
 FEED_EXPORTERS = {'csv': 'amazescrape.feed.CsvCustomSeperator'}
 FEED_EXPORT_ENCODING = "utf-8"
-FEEDS = {'feed/amazon_item.csv': {'format': 'csv', 'encoding': 'utf8', 'item_classes': [AmazonItem], 'overwrite': True}}
+FEEDS = {'../res/feed/amazon_item.csv': {'format': 'csv', 'encoding': 'utf8', 'item_classes': [AmazonItem], 'overwrite': True}}
+
+# Images configuration
+IMAGES_STORE = "../res/images"
