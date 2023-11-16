@@ -17,10 +17,9 @@ NEWSPIDER_MODULE = "amazescrape.spiders"
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-# TODO: use a rotating user agent (e.g. https://python.plainenglish.io/rotating-user-agent-with-scrapy-78ca141969fe) --> Better: create your own Downloader Middleware and use a rotating user agent there
-USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 7.1; en-US) AppleWebKit/535.12 (KHTML, like Gecko) Chrome/28.0.1410.43 Safari/535.12"
-)
+# USER_AGENT = (
+#     "Mozilla/5.0 (Windows NT 7.1; en-US) AppleWebKit/535.12 (KHTML, like Gecko) Chrome/28.0.1410.43 Safari/535.12"
+# )
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -31,7 +30,7 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-# DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 3
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
 # CONCURRENT_REQUESTS_PER_IP = 16
@@ -56,9 +55,10 @@ ROBOTSTXT_OBEY = False
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-# DOWNLOADER_MIDDLEWARES = {
-#    "amazescrape.middlewares.AmazescrapeDownloaderMiddleware": 543,
-# }
+DOWNLOADER_MIDDLEWARES = {
+    "amazescrape.middlewares.RandomUserAgentMiddleware": 543,
+    "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -98,6 +98,4 @@ TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 # Feed configuration
 FEED_EXPORTERS = {'csv': 'amazescrape.feed.CsvCustomSeperator'}
 FEED_EXPORT_ENCODING = "utf-8"
-FEEDS = {
-    'feed/amazon_item.csv': {'format': 'csv', 'encoding': 'utf8', 'item_classes': [AmazonItem], 'overwrite': True}
-}
+FEEDS = {'feed/amazon_item.csv': {'format': 'csv', 'encoding': 'utf8', 'item_classes': [AmazonItem], 'overwrite': True}}
