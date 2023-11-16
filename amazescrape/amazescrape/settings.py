@@ -17,6 +17,7 @@ NEWSPIDER_MODULE = "amazescrape.spiders"
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
+# TODO: use a rotating user agent (e.g. https://python.plainenglish.io/rotating-user-agent-with-scrapy-78ca141969fe) --> Better: create your own Downloader Middleware and use a rotating user agent there
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 7.1; en-US) AppleWebKit/535.12 (KHTML, like Gecko) Chrome/28.0.1410.43 Safari/535.12"
 )

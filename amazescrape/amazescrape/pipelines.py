@@ -3,7 +3,7 @@ from amazescrape.spiders.AmazonSpider import AmazonSpider
 from amazescrape.items import AmazonItem
 
 # TODO: store the scraped data in a database
-# TODO: store product images in file system
+# TODO: store product images in file system (https://docs.scrapy.org/en/latest/topics/media-pipeline.html?highlight=image)
 
 class AmazescrapePipeline:
     def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
