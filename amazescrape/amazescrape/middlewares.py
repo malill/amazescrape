@@ -3,26 +3,17 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-from scrapy import signals
-
 from random_user_agent.user_agent import UserAgent
 from random_user_agent.params import SoftwareName, OperatingSystem
+from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
 
 
-class RandomUserAgentMiddleware:
+class RandomUserAgentMiddleware(UserAgentMiddleware):
     """This middleware allows spiders to override the user_agent"""
 
     def __init__(self, user_agent="Scrapy"):
+        super().__init__()
         self.user_agent = self.get_random_user_agent()
-
-    @classmethod
-    def from_crawler(cls, crawler):
-        o = cls(crawler.settings["USER_AGENT"])
-        crawler.signals.connect(o.spider_opened, signal=signals.spider_opened)
-        return o
-
-    def spider_opened(self, spider):
-        self.user_agent = getattr(spider, "user_agent", self.user_agent)
 
     def process_request(self, request, spider):
         '''Override the request's user agent.'''
