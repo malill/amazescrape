@@ -6,9 +6,21 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
+
+@dataclass
+class AmazonScrapingInfo:
+    """Contains information about the scraping process."""
+    prefix: str | None = field(default=None)
+    suffix: str | None = field(default=None)
+    url: str | None = field(default=None)
+    request_timestamp: datetime | None = field(default=None)
+
+
 @dataclass
 class AmazonItem:
-    # Scraping info
+    """Contains information about a single product."""
+    # PRODUCT SEARCH PAGE (PSP) INFORMATION
+    # Scraping information
     prefix: str | None = field(default=None)
     suffix: str | None = field(default=None)
     url: str | None = field(default=None)
@@ -33,9 +45,11 @@ class AmazonItem:
     status_badge: str | None = field(default=None)
     prime: str | None = field(default=None)
 
-@dataclass
-class AmazonScrapingInfo:
-    prefix: str | None = field(default=None)
-    suffix: str | None = field(default=None)
-    url: str | None = field(default=None)
-    request_timestamp: datetime | None = field(default=None)
+    # PRODUCT DETAIL PAGE (PDP) INFORMATION
+    # Basic information
+    pdp_url: str | None = field(default=None)
+    pdp_title: str | None = field(default=None)
+
+    # Buy box
+    merchant_id: str | None = field(default=None)
+    fulfiller: str | None = field(default=None)

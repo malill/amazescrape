@@ -3,8 +3,8 @@ import scrapy
 from scrapy import Request
 from scrapy.http import Response
 from amazescrape.itemloader import AmazonItemLoader
-
 from amazescrape.items import AmazonItem, AmazonScrapingInfo
+import csv
 
 
 class AmazonSpider(scrapy.Spider):
@@ -18,8 +18,9 @@ class AmazonSpider(scrapy.Spider):
         filepath = "../res/mock_urls.csv"
         try:
             with open(filepath, "r") as f:
-                next(f)  # Skip the header line
-                return [AmazonScrapingInfo(*line.strip().split(";")) for line in f if line.strip()]
+                csv_reader = csv.reader(f, delimiter=';')
+                next(csv_reader)  # Skip the header line
+                return [AmazonScrapingInfo(*row) for row in csv_reader if row]
         except IOError as e:
             self.logger.error(f"Error reading file: {e}")
             return []
@@ -33,13 +34,75 @@ class AmazonSpider(scrapy.Spider):
         search_results = response.xpath(
             "//div[@data-asin and @data-index and @data-uuid and @data-component-type='s-search-result']"
         )
+
+        if not search_results:
+            self.logger.warning(f"No search results found on {response.url}")
+            return
+
         self.logger.info(f"Found {len(search_results)} search results on {response.url}")
         scraping_info = response.meta.get('scraping_info')
 
         for search_result in search_results:
-            yield self.load_amazon_item(search_result, scraping_info)
+            amazon_item = self.load_amazon_search_item(search_result, scraping_info)
+            product_url = search_result.xpath(".//h2//a[contains(@class, 'a-link-normal')]/@href")
+            # product_url = self.create_url(amazon_item)
+            if product_url:
+                url = product_url[0].get()
+                if url is not None:
+                    # follow
+                    amazon_item.pdp_url = url
+                    yield response.follow(
+                        url,
+                        callback=self.parse_product_page,
+                        meta={"amazon_item": amazon_item, "fallback_item": amazon_item, "handle_httpstatus_all": True},
+                        errback=self.handle_request_failure,
+                    )
 
-    def load_amazon_item(self, response: Response, scraping_info: AmazonScrapingInfo) -> AmazonItem:
+                    # yield scrapy.Request(
+                    #     url=product_url,
+                    #     callback=self.parse_product_page,
+                    #     meta={"amazon_item": amazon_item, "fallback_item": amazon_item, "handle_httpstatus_all": True},
+                    #     errback=self.handle_request_failure,
+                    # )
+            else:
+                yield amazon_item
+
+    def create_url(self, amazon_item: AmazonItem) -> str:
+        if amazon_item and amazon_item.asin:
+            return f"https://www.amazon.de/dp/{amazon_item.asin}"
+        self.logger.error("Missing ASIN in Amazon item.")
+        return None
+
+    def handle_request_failure(self, failure):
+        self.logger.error(f"Request failed: {failure.request.url}")
+        # Yield the fallback item
+        yield failure.request.meta.get('fallback_item')
+
+    def parse_product_page(self, response: Response) -> AmazonItem:
+        amazon_item = response.meta.get("amazon_item")
+        if amazon_item:
+            amazon_item = self.load_amazon_product_page(amazon_item, response)
+            yield amazon_item
+        else:
+            self.logger.error("Amazon item not found in response meta.")
+
+    def load_amazon_product_page(self, amazon_item: AmazonItem, response: Response) -> AmazonItem:
+        item_loader = AmazonItemLoader(item=amazon_item, selector=response)
+        item_loader.add_value("pdp_url", response.url)
+        item_loader.add_xpath("merchant_id", "//*[@id='merchantID']/@value")
+        item_loader.add_xpath("pdp_title", "//span[@id='productTitle']//text()")
+
+        buy_box_element = response.xpath("//div[@id='offer-display-features']")
+
+        if buy_box_element:
+            item_loader.add_xpath(
+                "fulfiller",
+                "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-fulfiller-info'][2]//span//text()",
+            )
+
+        return item_loader.load_item()
+
+    def load_amazon_search_item(self, response: Response, scraping_info: AmazonScrapingInfo) -> AmazonItem:
         item_loader = AmazonItemLoader(item=AmazonItem(), selector=response)
 
         # Scraping info
