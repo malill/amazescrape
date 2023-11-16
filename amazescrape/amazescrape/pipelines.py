@@ -5,7 +5,8 @@ from amazescrape.items import AmazonItem
 # TODO: store the scraped data in a database
 # TODO: store product images in file system (https://docs.scrapy.org/en/latest/topics/media-pipeline.html?highlight=image)
 
-class AmazescrapePipeline:
+
+class AmazonItemPipeline:
     def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
         # Transform the rating
         if amazon_item.rating_avg is not None:
@@ -23,8 +24,17 @@ class AmazescrapePipeline:
         if amazon_item.status_badge_prop is not None:
             amazon_item.status_badge_prop = json.loads(amazon_item.status_badge_prop)["badgeType"]
 
-
         return amazon_item
 
     def fix_price(self, price_str: str) -> str:
         return ''.join(filter(lambda x: x.isdigit(), price_str))
+
+
+class AmazonItemImagePipeline:
+    def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
+        print("Processing image for item: " + amazon_item.asin)
+        return amazon_item
+
+    def fix_image_url(self, image_url: str) -> str:
+        print("Fixing image URL: " + image_url)
+        return image_url.replace("._AC_", "._SX522_")
