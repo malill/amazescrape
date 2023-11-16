@@ -10,6 +10,7 @@ from datetime import datetime
 @dataclass
 class AmazonScrapingInfo:
     """Contains information about the scraping process."""
+
     prefix: str | None = field(default=None)
     suffix: str | None = field(default=None)
     url: str | None = field(default=None)
@@ -19,6 +20,7 @@ class AmazonScrapingInfo:
 @dataclass
 class AmazonItem:
     """Contains information about a single product."""
+
     # PRODUCT SEARCH PAGE (PSP) INFORMATION
     # Scraping information
     prefix: str | None = field(default=None)
@@ -42,7 +44,8 @@ class AmazonItem:
     rank: str | None = field(default=None)
 
     # Badges
-    status_badge: str | None = field(default=None)
+    status_badge_prop: str | None = field(default=None)
+    status_badge_text: str | None = field(default=None)
     prime: str | None = field(default=None)
 
     # PRODUCT DETAIL PAGE (PDP) INFORMATION
@@ -51,5 +54,7 @@ class AmazonItem:
     pdp_title: str | None = field(default=None)
 
     # Buy box
-    merchant_id: str | None = field(default=None)
-    fulfiller: str | None = field(default=None)
+    fulfiller_id: str | None = field(default=None) # TODO: check if available
+    fulfiller_name: str | None = field(default=None)  # "Versand", "Dispatches from"
+    merchant_id: str | None = field(default=None)  # aka seller_id
+    merchant_name: str | None = field(default=None)  # "Verkäufer", "Sold by"

@@ -2,6 +2,8 @@ import json
 from amazescrape.spiders.AmazonSpider import AmazonSpider
 from amazescrape.items import AmazonItem
 
+# TODO: store the scraped data in a database
+# TODO: store product images in file system
 
 class AmazescrapePipeline:
     def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
@@ -18,8 +20,9 @@ class AmazescrapePipeline:
             amazon_item.price_strike = self.fix_price(amazon_item.price_strike)
 
         # Transform the badge type
-        if amazon_item.status_badge is not None:
-            amazon_item.status_badge = json.loads(amazon_item.status_badge)["badgeType"]
+        if amazon_item.status_badge_prop is not None:
+            amazon_item.status_badge_prop = json.loads(amazon_item.status_badge_prop)["badgeType"]
+
 
         return amazon_item
 

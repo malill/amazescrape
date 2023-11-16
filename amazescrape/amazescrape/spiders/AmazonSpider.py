@@ -19,7 +19,7 @@ class AmazonSpider(scrapy.Spider):
         try:
             with open(filepath, "r") as f:
                 csv_reader = csv.reader(f, delimiter=';')
-                next(csv_reader)  # Skip the header line
+                next(csv_reader)
                 return [AmazonScrapingInfo(*row) for row in csv_reader if row]
         except IOError as e:
             self.logger.error(f"Error reading file: {e}")
@@ -34,6 +34,7 @@ class AmazonSpider(scrapy.Spider):
         search_results = response.xpath(
             "//div[@data-asin and @data-index and @data-uuid and @data-component-type='s-search-result']"
         )
+        # TODO: what about carousels?
 
         if not search_results:
             self.logger.warning(f"No search results found on {response.url}")
@@ -45,7 +46,6 @@ class AmazonSpider(scrapy.Spider):
         for search_result in search_results:
             amazon_item = self.load_amazon_search_item(search_result, scraping_info)
             product_url = search_result.xpath(".//h2//a[contains(@class, 'a-link-normal')]/@href")
-            # product_url = self.create_url(amazon_item)
             if product_url:
                 url = product_url[0].get()
                 if url is not None:
@@ -58,20 +58,8 @@ class AmazonSpider(scrapy.Spider):
                         errback=self.handle_request_failure,
                     )
 
-                    # yield scrapy.Request(
-                    #     url=product_url,
-                    #     callback=self.parse_product_page,
-                    #     meta={"amazon_item": amazon_item, "fallback_item": amazon_item, "handle_httpstatus_all": True},
-                    #     errback=self.handle_request_failure,
-                    # )
             else:
                 yield amazon_item
-
-    def create_url(self, amazon_item: AmazonItem) -> str:
-        if amazon_item and amazon_item.asin:
-            return f"https://www.amazon.de/dp/{amazon_item.asin}"
-        self.logger.error("Missing ASIN in Amazon item.")
-        return None
 
     def handle_request_failure(self, failure):
         self.logger.error(f"Request failed: {failure.request.url}")
@@ -89,15 +77,20 @@ class AmazonSpider(scrapy.Spider):
     def load_amazon_product_page(self, amazon_item: AmazonItem, response: Response) -> AmazonItem:
         item_loader = AmazonItemLoader(item=amazon_item, selector=response)
         item_loader.add_value("pdp_url", response.url)
-        item_loader.add_xpath("merchant_id", "//*[@id='merchantID']/@value")
         item_loader.add_xpath("pdp_title", "//span[@id='productTitle']//text()")
+
+        item_loader.add_xpath("merchant_id", "//*[@id='merchantID']/@value")
 
         buy_box_element = response.xpath("//div[@id='offer-display-features']")
 
         if buy_box_element:
             item_loader.add_xpath(
-                "fulfiller",
+                "fulfiller_name",
                 "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-fulfiller-info'][2]//span//text()",
+            )
+            item_loader.add_xpath(
+                "merchant_name",
+                "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-merchant-info'][2]//span//text()",
             )
 
         return item_loader.load_item()
@@ -128,9 +121,13 @@ class AmazonSpider(scrapy.Spider):
         item_loader.add_xpath("rank", "./@data-index")
 
         # Badges
-        ## Top Badge
+
+        ## Status Badge
         item_loader.add_xpath(
-            "status_badge", ".//span[@data-component-type='s-status-badge-component']//@data-component-props"
+            "status_badge_prop", ".//span[@data-component-type='s-status-badge-component']//@data-component-props"
+        )
+        item_loader.add_xpath(
+            "status_badge_text", ".//span[@data-component-type='s-status-badge-component']//@data-csa-c-badge-text"
         )
 
         ## Amazon Prime
