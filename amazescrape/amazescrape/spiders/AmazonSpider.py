@@ -52,9 +52,11 @@ class AmazonSpider(scrapy.Spider):
     def start_requests(self) -> Request:
         for scraping_info in self.scraping_infos:
             scraping_info.request_timestamp = datetime.now()
-            yield scrapy.Request(url=scraping_info.url, callback=self.parse, meta={"scraping_info": scraping_info})
+            yield scrapy.Request(
+                url=scraping_info.url, callback=self.parse_search_page, meta={"scraping_info": scraping_info}
+            )
 
-    def parse(self, response: Response) -> AmazonItem:
+    def parse_search_page(self, response: Response) -> AmazonItem:
         search_results = response.xpath(
             "//div[@data-asin and @data-index and @data-uuid and @data-component-type='s-search-result']"
         )
