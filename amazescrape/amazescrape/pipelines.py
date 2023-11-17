@@ -10,7 +10,20 @@ from amazescrape.items import AmazonItem
 # TODO: store product images in file system (https://docs.scrapy.org/en/latest/topics/media-pipeline.html?highlight=image)
 
 
+class AmazonImagePipeline(ImagesPipeline):
+    '''Pipeline for downloading images from Amazon.'''
+
+    def file_path(self, request, response=None, info=None, *, item: AmazonItem = None):
+        '''Returns the file path for storing the image. The image is stored in the `images` directory. The file name is
+        the same as the original file name, that is extracted from the image URL.'''
+        original_file_name = PurePosixPath(urlparse(request.url).path).name
+        item.image_filename = original_file_name
+        return original_file_name
+
+
 class AmazonItemPipeline:
+    '''Pipeline for processing scraped values.'''
+
     def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
         # Transform the rating
         if amazon_item.rating_avg is not None:
@@ -34,13 +47,9 @@ class AmazonItemPipeline:
         return ''.join(filter(lambda x: x.isdigit(), price_str))
 
 
-class AmazonImagePipeline(ImagesPipeline):
-    '''Pipeline for downloading images from Amazon.'''
+class AmazonItemDBStoragePipeline:
+    '''Pipeline for storing scraped data in a database.'''
 
-    def file_path(self, request, response=None, info=None, *, item: AmazonItem = None):
-        '''Returns the file path for storing the image. The path is relative to the project root. The image is stored in
-        the `files` directory. The file name is the same as the original file name. The original file name is extracted
-        from the URL. The URL is the image URL from the scraped data.'''
-        original_file_name = PurePosixPath(urlparse(request.url).path).name
-        item.image_filename = original_file_name
-        return "files/" + original_file_name
+    def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
+        # Store item in database
+        return amazon_item
