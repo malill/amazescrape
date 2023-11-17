@@ -146,3 +146,6 @@ venv.bak/
 # Scrapy images
 */images/*
 !*/images/.gitkeep
+
+# Scrapy database
+*.db

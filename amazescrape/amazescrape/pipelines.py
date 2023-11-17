@@ -47,9 +47,81 @@ class AmazonItemPipeline:
         return ''.join(filter(lambda x: x.isdigit(), price_str))
 
 
-class AmazonItemDBStoragePipeline:
-    '''Pipeline for storing scraped data in a SQLite database.'''
+# pipelines.py
 
-    def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
-        # Store item in database
-        return amazon_item
+import sqlite3
+
+
+class SQLitePipeline:
+    def __init__(self):
+        self.con = sqlite3.connect('../res/amazescrape.db')
+        self.cur = self.con.cursor()
+
+        # Create table with fields corresponding to AmazonItem
+        self.cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS amazon_items(
+                prefix TEXT,
+                suffix TEXT,
+                url TEXT,
+                request_timestamp TEXT,
+                asin TEXT,
+                name TEXT,
+                image_urls TEXT,
+                image_filename TEXT,
+                s_rating_avg INTEGER,
+                s_rating_n INTEGER,
+                s_price INTEGER,
+                s_price_strike INTEGER,
+                s_rank INTEGER,
+                sb_status_prop TEXT,
+                sb_status_text TEXT,
+                sb_prime TEXT,
+                p_url TEXT,
+                p_fulfiller_id TEXT,
+                p_fulfiller_name TEXT,
+                p_merchant_id TEXT,
+                p_merchant_name TEXT
+            )
+            """
+        )
+
+    def process_item(self, item, spider):
+        # Serialize list and datetime fields
+        image_urls = ','.join(item.image_urls) if item.image_urls else None
+        request_timestamp = item.request_timestamp.isoformat() if item.request_timestamp else None
+
+        self.cur.execute(
+            """
+            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                item.prefix,
+                item.suffix,
+                item.url,
+                request_timestamp,
+                item.asin,
+                item.name,
+                image_urls,
+                item.image_filename,
+                item.s_rating_avg,
+                item.s_rating_n,
+                item.s_price,
+                item.s_price_strike,
+                item.s_rank,
+                item.sb_status_prop,
+                item.sb_status_text,
+                item.sb_prime,
+                item.p_url,
+                item.p_fulfiller_id,
+                item.p_fulfiller_name,
+                item.p_merchant_id,
+                item.p_merchant_name,
+            ),
+        )
+
+        self.con.commit()
+        return item
+
+    def close_spider(self, spider):
+        self.con.close()

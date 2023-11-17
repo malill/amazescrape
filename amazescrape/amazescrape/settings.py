@@ -74,7 +74,11 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {"amazescrape.pipelines.AmazonImagePipeline": 200, "amazescrape.pipelines.AmazonItemPipeline": 300}
+ITEM_PIPELINES = {
+    "amazescrape.pipelines.AmazonImagePipeline": 200,
+    "amazescrape.pipelines.AmazonItemPipeline": 300,
+    "amazescrape.pipelines.SQLitePipeline": 400,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
