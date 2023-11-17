@@ -14,6 +14,30 @@ class AmazonSpider(scrapy.Spider):
         super().__init__(*args, **kwargs)
         self.scraping_infos = self.read_scraping_infos()
 
+    @staticmethod
+    def get_search_item_field_mappings() -> dict[str, str]:
+        return {
+            "asin": "./@data-asin",
+            "name": ".//h2//text()",
+            "image_urls": ".//img[@class='s-image']/@src",
+            "s_rating_avg": ".//span[@class='a-icon-alt']/text()",
+            "s_rating_n": ".//span[@class='a-size-base s-underline-text']/text()",
+            "s_price": ".//span[@class='a-price']/span[@class='a-offscreen']/text()",
+            "s_price_strike": ".//span[@data-a-strike='true']/span/text()",
+            "s_rank": "./@data-index",
+            "sb_status_prop": ".//span[@data-component-type='s-status-badge-component']//@data-component-props",
+            "sb_status_text": ".//span[@data-component-type='s-status-badge-component']//@data-csa-c-badge-text",
+            "sb_prime": ".//i[contains(@class, 'a-icon-prime')]/@aria-label",
+        }
+
+    @staticmethod
+    def get_product_page_field_mappings() -> dict[str, str]:
+        return {
+            "p_merchant_id": "//*[@id='merchantID']/@value",
+            "p_merchant_name": "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-merchant-info'][2]//span//text()",
+            "p_fulfiller_name": "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-fulfiller-info'][2]//span//text()",
+        }
+
     def read_scraping_infos(self):
         filepath = "../res/mock_urls.csv"
         try:
@@ -78,8 +102,9 @@ class AmazonSpider(scrapy.Spider):
     def load_amazon_search_item(self, response: Response, scraping_info: AmazonScrapingInfo) -> AmazonItem:
         item_loader = AmazonItemLoader(item=AmazonItem(), selector=response)
 
-        # Image URL (add as list)
-        item_loader.add_xpath("image_urls", ".//img[@class='s-image']/@src")
+        # Dynamic loading of fields based on mappings
+        for field, xpath in self.get_search_item_field_mappings().items():
+            item_loader.add_xpath(field, xpath)
 
         # Scraping info
         if scraping_info:
@@ -87,34 +112,6 @@ class AmazonSpider(scrapy.Spider):
             item_loader.add_value("suffix", scraping_info.suffix)
             item_loader.add_value("url", scraping_info.url)
             item_loader.add_value("request_timestamp", scraping_info.request_timestamp)
-
-        # Basic information
-        item_loader.add_xpath("asin", "./@data-asin")
-        item_loader.add_xpath("name", ".//h2//text()")
-
-        # Ratings
-        item_loader.add_xpath("s_rating_avg", ".//span[@class='a-icon-alt']/text()")
-        item_loader.add_xpath("s_rating_n", ".//span[@class='a-size-base s-underline-text']/text()")
-
-        # Price
-        item_loader.add_xpath("s_price", ".//span[@class='a-price']/span[@class='a-offscreen']/text()")
-        item_loader.add_xpath("s_price_strike", ".//span[@data-a-strike='true']/span/text()")
-
-        # Page ranking
-        item_loader.add_xpath("s_rank", "./@data-index")
-
-        # Badges
-
-        ## Status Badge
-        item_loader.add_xpath(
-            "sb_status_prop", ".//span[@data-component-type='s-status-badge-component']//@data-component-props"
-        )
-        item_loader.add_xpath(
-            "sb_status_text", ".//span[@data-component-type='s-status-badge-component']//@data-csa-c-badge-text"
-        )
-
-        ## Amazon Prime
-        item_loader.add_xpath("sb_prime", ".//i[contains(@class, 'a-icon-prime')]/@aria-label")
 
         amazonItem = item_loader.load_item()
         amazonItem.image_urls = [amazonItem.image_urls]  # ImagePipeline expects a list
@@ -125,19 +122,11 @@ class AmazonSpider(scrapy.Spider):
         item_loader = AmazonItemLoader(item=amazon_item, selector=response)
         item_loader.add_value("p_url", response.url)
 
-        item_loader.add_xpath("p_merchant_id", "//*[@id='merchantID']/@value")
-
         buy_box_element = response.xpath("//div[@id='offer-display-features']")
 
         if buy_box_element:
-            item_loader.add_xpath(
-                "p_fulfiller_name",
-                "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-fulfiller-info'][2]//span//text()",
-            )
-            item_loader.add_xpath(
-                "p_merchant_name",
-                "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-merchant-info'][2]//span//text()",
-            )
+            for field, xpath in self.get_product_page_field_mappings().items():
+                item_loader.add_xpath(field, xpath)
 
         amazonItem = item_loader.load_item()
         amazonItem.image_urls = [amazonItem.image_urls]  # ImagePipeline expects a list
