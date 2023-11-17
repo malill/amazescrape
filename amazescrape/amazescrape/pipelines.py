@@ -26,20 +26,20 @@ class AmazonItemPipeline:
 
     def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
         # Transform the rating
-        if amazon_item.rating_avg is not None:
-            amazon_item.rating_avg = ''.join(filter(lambda x: x.isdigit(), amazon_item.rating_avg[:3]))
-        if amazon_item.rating_n is not None:
-            amazon_item.rating_n = ''.join(filter(lambda x: x.isdigit(), amazon_item.rating_n))
+        if amazon_item.s_rating_avg is not None:
+            amazon_item.s_rating_avg = ''.join(filter(lambda x: x.isdigit(), amazon_item.s_rating_avg[:3]))
+        if amazon_item.s_rating_n is not None:
+            amazon_item.s_rating_n = ''.join(filter(lambda x: x.isdigit(), amazon_item.s_rating_n))
 
         # Transform the price
-        if amazon_item.price is not None:
-            amazon_item.price = self.fix_price(amazon_item.price)
-        if amazon_item.price_strike is not None:
-            amazon_item.price_strike = self.fix_price(amazon_item.price_strike)
+        if amazon_item.s_price is not None:
+            amazon_item.s_price = self.fix_price(amazon_item.s_price)
+        if amazon_item.s_price_strike is not None:
+            amazon_item.s_price_strike = self.fix_price(amazon_item.s_price_strike)
 
         # Transform the badge type
-        if amazon_item.status_badge_prop is not None:
-            amazon_item.status_badge_prop = json.loads(amazon_item.status_badge_prop)["badgeType"]
+        if amazon_item.sb_status_prop is not None:
+            amazon_item.sb_status_prop = json.loads(amazon_item.sb_status_prop)["badgeType"]
 
         return amazon_item
 
@@ -48,7 +48,7 @@ class AmazonItemPipeline:
 
 
 class AmazonItemDBStoragePipeline:
-    '''Pipeline for storing scraped data in a database.'''
+    '''Pipeline for storing scraped data in a SQLite database.'''
 
     def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
         # Store item in database

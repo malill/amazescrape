@@ -38,28 +38,27 @@ class AmazonItem:
     image_filename: str | None = field(default=None)
 
     # Rating
-    rating_avg: int | None = field(default=None)
-    rating_n: int | None = field(default=None)
+    s_rating_avg: str | None = field(default=None)
+    s_rating_n: str | None = field(default=None)
 
     # Price
-    price: int | None = field(default=None)
-    price_strike: int | None = field(default=None)
+    s_price: str | None = field(default=None)
+    s_price_strike: str | None = field(default=None)
 
     # Page ranking
-    rank: int | None = field(default=None)
+    s_rank: str | None = field(default=None)
 
     # Badges
-    status_badge_prop: str | None = field(default=None)
-    status_badge_text: str | None = field(default=None)
-    prime: str | None = field(default=None)
+    sb_status_prop: str | None = field(default=None)
+    sb_status_text: str | None = field(default=None)
+    sb_prime: str | None = field(default=None)
 
     # PRODUCT DETAIL PAGE (PDP) INFORMATION
     # Basic information
-    pdp_url: str | None = field(default=None)
-    pdp_title: str | None = field(default=None)
+    p_url: str | None = field(default=None)
 
     # Buy box
-    fulfiller_id: str | None = field(default=None)  # TODO: check if available
-    fulfiller_name: str | None = field(default=None)  # "Versand", "Dispatches from"
-    merchant_id: str | None = field(default=None)  # aka seller_id
-    merchant_name: str | None = field(default=None)  # "Verkäufer", "Sold by"
+    p_fulfiller_id: str | None = field(default=None)  # TODO: check if available
+    p_fulfiller_name: str | None = field(default=None)  # "Versand", "Dispatches from"
+    p_merchant_id: str | None = field(default=None)  # aka seller_id
+    p_merchant_name: str | None = field(default=None)  # "Verkäufer", "Sold by"

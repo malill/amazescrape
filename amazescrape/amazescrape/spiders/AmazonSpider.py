@@ -51,7 +51,7 @@ class AmazonSpider(scrapy.Spider):
                 url = product_url[0].get()
                 if url is not None:
                     # follow
-                    amazon_item.pdp_url = url
+                    amazon_item.p_url = url
                     yield response.follow(
                         url,
                         callback=self.parse_product_page,
@@ -75,30 +75,6 @@ class AmazonSpider(scrapy.Spider):
         else:
             self.logger.error("Amazon item not found in response meta.")
 
-    def load_amazon_product_page(self, amazon_item: AmazonItem, response: Response) -> AmazonItem:
-        item_loader = AmazonItemLoader(item=amazon_item, selector=response)
-        item_loader.add_value("pdp_url", response.url)
-        item_loader.add_xpath("pdp_title", "//span[@id='productTitle']//text()")
-
-        item_loader.add_xpath("merchant_id", "//*[@id='merchantID']/@value")
-
-        buy_box_element = response.xpath("//div[@id='offer-display-features']")
-
-        if buy_box_element:
-            item_loader.add_xpath(
-                "fulfiller_name",
-                "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-fulfiller-info'][2]//span//text()",
-            )
-            item_loader.add_xpath(
-                "merchant_name",
-                "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-merchant-info'][2]//span//text()",
-            )
-
-        amazonItem = item_loader.load_item()
-        amazonItem.image_urls = [amazonItem.image_urls] # ImagePipeline expects a list
-
-        return amazonItem
-
     def load_amazon_search_item(self, response: Response, scraping_info: AmazonScrapingInfo) -> AmazonItem:
         item_loader = AmazonItemLoader(item=AmazonItem(), selector=response)
 
@@ -117,30 +93,53 @@ class AmazonSpider(scrapy.Spider):
         item_loader.add_xpath("name", ".//h2//text()")
 
         # Ratings
-        item_loader.add_xpath("rating_avg", ".//span[@class='a-icon-alt']/text()")
-        item_loader.add_xpath("rating_n", ".//span[@class='a-size-base s-underline-text']/text()")
+        item_loader.add_xpath("s_rating_avg", ".//span[@class='a-icon-alt']/text()")
+        item_loader.add_xpath("s_rating_n", ".//span[@class='a-size-base s-underline-text']/text()")
 
         # Price
-        item_loader.add_xpath("price", ".//span[@class='a-price']/span[@class='a-offscreen']/text()")
-        item_loader.add_xpath("price_strike", ".//span[@data-a-strike='true']/span/text()")
+        item_loader.add_xpath("s_price", ".//span[@class='a-price']/span[@class='a-offscreen']/text()")
+        item_loader.add_xpath("s_price_strike", ".//span[@data-a-strike='true']/span/text()")
 
         # Page ranking
-        item_loader.add_xpath("rank", "./@data-index")
+        item_loader.add_xpath("s_rank", "./@data-index")
 
         # Badges
 
         ## Status Badge
         item_loader.add_xpath(
-            "status_badge_prop", ".//span[@data-component-type='s-status-badge-component']//@data-component-props"
+            "sb_status_prop", ".//span[@data-component-type='s-status-badge-component']//@data-component-props"
         )
         item_loader.add_xpath(
-            "status_badge_text", ".//span[@data-component-type='s-status-badge-component']//@data-csa-c-badge-text"
+            "sb_status_text", ".//span[@data-component-type='s-status-badge-component']//@data-csa-c-badge-text"
         )
 
         ## Amazon Prime
-        item_loader.add_xpath("prime", ".//i[contains(@class, 'a-icon-prime')]/@aria-label")
+        item_loader.add_xpath("sb_prime", ".//i[contains(@class, 'a-icon-prime')]/@aria-label")
 
         amazonItem = item_loader.load_item()
-        amazonItem.image_urls = [amazonItem.image_urls] # ImagePipeline expects a list
+        amazonItem.image_urls = [amazonItem.image_urls]  # ImagePipeline expects a list
 
         return item_loader.load_item()
+
+    def load_amazon_product_page(self, amazon_item: AmazonItem, response: Response) -> AmazonItem:
+        item_loader = AmazonItemLoader(item=amazon_item, selector=response)
+        item_loader.add_value("p_url", response.url)
+
+        item_loader.add_xpath("p_merchant_id", "//*[@id='merchantID']/@value")
+
+        buy_box_element = response.xpath("//div[@id='offer-display-features']")
+
+        if buy_box_element:
+            item_loader.add_xpath(
+                "p_fulfiller_name",
+                "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-fulfiller-info'][2]//span//text()",
+            )
+            item_loader.add_xpath(
+                "p_merchant_name",
+                "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-merchant-info'][2]//span//text()",
+            )
+
+        amazonItem = item_loader.load_item()
+        amazonItem.image_urls = [amazonItem.image_urls]  # ImagePipeline expects a list
+
+        return amazonItem
