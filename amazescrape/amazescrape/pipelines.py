@@ -33,9 +33,19 @@ class AmazonItemPipeline:
 
         # Transform the price
         if amazon_item.s_price is not None:
-            amazon_item.s_price = self.fix_price(amazon_item.s_price)
+            amazon_item.s_price = self.get_digits(amazon_item.s_price)
         if amazon_item.s_price_strike is not None:
-            amazon_item.s_price_strike = self.fix_price(amazon_item.s_price_strike)
+            amazon_item.s_price_strike = self.get_digits(amazon_item.s_price_strike)
+
+        # Transform left in stock
+        if amazon_item.s_left_in_stock is not None:
+            amazon_item.s_left_in_stock = self.get_digits(amazon_item.s_left_in_stock)
+
+        # Transform the other offers
+        if amazon_item.s_other_price_min is not None:
+            amazon_item.s_other_price_min = self.get_digits(amazon_item.s_other_price_min)
+        if amazon_item.s_other_n is not None:
+            amazon_item.s_other_n = self.get_digits(amazon_item.s_other_n)
 
         # Transform the badge type
         if amazon_item.sb_status_prop is not None:
@@ -43,8 +53,8 @@ class AmazonItemPipeline:
 
         return amazon_item
 
-    def fix_price(self, price_str: str) -> str:
-        return ''.join(filter(lambda x: x.isdigit(), price_str))
+    def get_digits(self, text_content: str) -> str:
+        return ''.join(filter(lambda x: x.isdigit(), text_content))
 
 
 # pipelines.py
@@ -67,16 +77,23 @@ class SQLitePipeline:
                 request_timestamp TEXT,
                 asin TEXT,
                 name TEXT,
-                image_urls TEXT,
                 image_filename TEXT,
                 s_rating_avg INTEGER,
                 s_rating_n INTEGER,
                 s_price INTEGER,
                 s_price_strike INTEGER,
                 s_rank INTEGER,
+                s_delivery TEXT,
+                s_left_in_stock INTEGER,
+                s_other_price_min INTEGER,
+                s_other_n INTEGER,
                 sb_status_prop TEXT,
                 sb_status_text TEXT,
+                sb_sponsored TEXT,
+                sb_lightning_deal TEXT,
+                sb_promotion TEXT,
                 sb_prime TEXT,
+                sb_coupon TEXT,
                 p_url TEXT,
                 p_fulfiller_id TEXT,
                 p_fulfiller_name TEXT,
@@ -93,7 +110,7 @@ class SQLitePipeline:
 
         self.cur.execute(
             """
-            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 item.prefix,
@@ -102,16 +119,23 @@ class SQLitePipeline:
                 request_timestamp,
                 item.asin,
                 item.name,
-                image_urls,
                 item.image_filename,
                 item.s_rating_avg,
                 item.s_rating_n,
                 item.s_price,
                 item.s_price_strike,
                 item.s_rank,
+                item.s_delivery,
+                item.s_left_in_stock,
+                item.s_other_price_min,
+                item.s_other_n,
                 item.sb_status_prop,
                 item.sb_status_text,
+                item.sb_sponsored,
+                item.sb_lightning_deal,
+                item.sb_promotion,
                 item.sb_prime,
+                item.sb_coupon,
                 item.p_url,
                 item.p_fulfiller_id,
                 item.p_fulfiller_name,

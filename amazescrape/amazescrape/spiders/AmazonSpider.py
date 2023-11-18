@@ -25,9 +25,17 @@ class AmazonSpider(scrapy.Spider):
             "s_price": ".//span[@class='a-price']/span[@class='a-offscreen']/text()",
             "s_price_strike": ".//span[@data-a-strike='true']/span/text()",
             "s_rank": "./@data-index",
+            "s_delivery": ".//div[@class='a-row a-size-base a-color-secondary s-align-children-center']//@aria-label",
+            "s_left_in_stock": ".//span[@class='a-size-base a-color-price']",
+            "s_other_price_min": ".//div[@class='a-section a-spacing-none a-spacing-top-mini']//div[@class='a-row a-size-base a-color-secondary']//span[@class='a-color-base']//text()",
+            "s_other_n": ".//div[@class='a-section a-spacing-none a-spacing-top-mini']//div[@class='a-row a-size-base a-color-secondary']//span[@class='a-declarative']//a//text()",
             "sb_status_prop": ".//span[@data-component-type='s-status-badge-component']//@data-component-props",
             "sb_status_text": ".//span[@data-component-type='s-status-badge-component']//@data-csa-c-badge-text",
+            "sb_sponsored": ".//a[contains(@class, 'puis-sponsored-label-text')]//span[@class='a-color-secondary']/text()",
+            "sb_lightning_deal": ".//span[@data-a-badge-color='sx-lightning-deal-red']//span[@class='a-badge-text']//text()",
+            "sb_promotion": ".//span[@class='a-size-base s-highlighted-text-padding aok-inline-block s-promotion-highlight-color']/text()",
             "sb_prime": ".//i[contains(@class, 'a-icon-prime')]/@aria-label",
+            "sb_coupon": ".//span[@class='s-coupon-unclipped']//span[contains(@class, 's-coupon-highlight-color')]/text()",
         }
 
     @staticmethod
@@ -118,7 +126,7 @@ class AmazonSpider(scrapy.Spider):
         amazonItem = item_loader.load_item()
         amazonItem.image_urls = [amazonItem.image_urls]  # ImagePipeline expects a list
 
-        return item_loader.load_item()
+        return amazonItem
 
     def load_amazon_product_page(self, amazon_item: AmazonItem, response: Response) -> AmazonItem:
         item_loader = AmazonItemLoader(item=amazon_item, selector=response)

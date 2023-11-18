@@ -48,10 +48,24 @@ class AmazonItem:
     # Page ranking
     s_rank: str | None = field(default=None)
 
+    # Delivery info
+    s_delivery: str | None = field(default=None)
+
+    # Left in stock
+    s_left_in_stock: str | None = field(default=None)
+
+    # Other offers
+    s_other_price_min: str | None = field(default=None)
+    s_other_n: str | None = field(default=None)
+
     # Badges
     sb_status_prop: str | None = field(default=None)
     sb_status_text: str | None = field(default=None)
+    sb_sponsored: str | None = field(default=None)
+    sb_lightning_deal: str | None = field(default=None)
+    sb_promotion: str | None = field(default=None)
     sb_prime: str | None = field(default=None)
+    sb_coupon: str | None = field(default=None)
 
     # PRODUCT DETAIL PAGE (PDP) INFORMATION
     # Basic information
