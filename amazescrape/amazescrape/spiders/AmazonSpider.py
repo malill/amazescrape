@@ -141,33 +141,12 @@ class AmazonSpider(scrapy.Spider):
         else:
             yield amazon_item
 
-    def extract_product_url(self, search_result, amazon_item):
-        product_url = search_result.xpath(".//h2//a[contains(@class, 'a-link-normal')]/@href").get()
-        if product_url and "sspa" in product_url:
-            return f"/dp/{amazon_item.asin}"
-        return product_url
-
-    def handle_request_failure(self, failure):
-        self.logger.error(f"Request failed: {failure.request.url}")
-        yield failure.request.meta.get('fallback_item')
-
-    def parse_product_page(self, response: Response) -> AmazonItem:
-        amazon_item = response.meta.get("amazon_item")
-        amazon_item.p_timestamp = datetime.now()
-        if amazon_item:
-            amazon_item = self.load_amazon_product_page(amazon_item, response)
-            yield amazon_item
-        else:
-            self.logger.error("Amazon item not found in response meta.")
-
     def load_amazon_search_item(self, response: Response, scraping_info: AmazonScrapingInfo) -> AmazonItem:
         item_loader = AmazonItemLoader(item=AmazonItem(), selector=response)
 
-        # Dynamic loading of fields based on mappings
         for field, xpath in self.get_xpath_search_mappings().items():
             item_loader.add_xpath(field, xpath)
 
-        # Scraping info
         if scraping_info:
             item_loader.add_value("prefix", scraping_info.prefix)
             item_loader.add_value("suffix", scraping_info.suffix)
@@ -182,11 +161,25 @@ class AmazonSpider(scrapy.Spider):
 
         return amazonItem
 
+    def extract_product_url(self, search_result, amazon_item):
+        product_url = search_result.xpath(".//h2//a[contains(@class, 'a-link-normal')]/@href").get()
+        if product_url and "sspa" in product_url:
+            return f"/dp/{amazon_item.asin}"
+        return product_url
+
+    def parse_product_page(self, response: Response) -> AmazonItem:
+        amazon_item = response.meta.get("amazon_item")
+        amazon_item.p_timestamp = datetime.now()
+        if amazon_item:
+            amazon_item = self.load_amazon_product_page(amazon_item, response)
+            yield amazon_item
+        else:
+            self.logger.error("Amazon item not found in response meta.")
+
     def load_amazon_product_page(self, amazon_item: AmazonItem, response: Response) -> AmazonItem:
         item_loader = AmazonItemLoader(item=amazon_item, selector=response)
         item_loader.add_value("p_url", response.url)
 
-        # Iterate the xpath mappings
         for field, xpath in self.get_xpath_product_page_mappings().items():
             item_loader.add_xpath(field, xpath)
 
@@ -194,3 +187,7 @@ class AmazonSpider(scrapy.Spider):
         amazonItem.image_urls = [amazonItem.image_urls]  # ImagePipeline expects a list
 
         return amazonItem
+
+    def handle_request_failure(self, failure):
+        self.logger.error(f"Request failed: {failure.request.url}")
+        yield failure.request.meta.get('fallback_item')
