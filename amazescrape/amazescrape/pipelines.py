@@ -99,6 +99,7 @@ class SQLitePipeline:
                 sb_status_prop TEXT,
                 sb_status_text TEXT,
                 sb_sponsored TEXT,
+                sb_last_bought TEXT,
                 sb_lightning_deal TEXT,
                 sb_promotion TEXT,
                 sb_prime TEXT,
@@ -107,11 +108,15 @@ class SQLitePipeline:
                 sb_other_02 TEXT,
                 sb_other_03 TEXT,
                 p_url TEXT,
-                p_fulfiller_id TEXT,
                 p_fulfiller_name TEXT,
                 p_merchant_id TEXT,
                 p_merchant_name TEXT,
-                p_bestseller_rank TEXT
+                p_bestseller_rank TEXT,
+                p_rating_1_star TEXT,
+                p_rating_2_star TEXT,
+                p_rating_3_star TEXT,
+                p_rating_4_star TEXT,
+                p_rating_5_star TEXT
             )
             """
         )
@@ -123,7 +128,7 @@ class SQLitePipeline:
 
         self.cur.execute(
             """
-            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 item.prefix,
@@ -146,6 +151,7 @@ class SQLitePipeline:
                 item.sb_status_prop,
                 item.sb_status_text,
                 item.sb_sponsored,
+                item.sb_last_bought,
                 item.sb_lightning_deal,
                 item.sb_promotion,
                 item.sb_prime,
@@ -154,11 +160,15 @@ class SQLitePipeline:
                 item.sb_other_02,
                 item.sb_other_03,
                 item.p_url,
-                item.p_fulfiller_id,
                 item.p_fulfiller_name,
                 item.p_merchant_id,
                 item.p_merchant_name,
                 item.p_bestseller_rank,
+                item.p_rating_1_star,
+                item.p_rating_2_star,
+                item.p_rating_3_star,
+                item.p_rating_4_star,
+                item.p_rating_5_star,
             ),
         )
 

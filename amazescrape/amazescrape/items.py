@@ -65,6 +65,7 @@ class AmazonItem:
     sb_status_prop: str | None = field(default=None)
     sb_status_text: str | None = field(default=None)
     sb_sponsored: str | None = field(default=None)
+    sb_last_bought: str | None = field(default=None)
     sb_lightning_deal: str | None = field(default=None)
     sb_promotion: str | None = field(default=None)
     sb_prime: str | None = field(default=None)
@@ -80,10 +81,16 @@ class AmazonItem:
     p_url: str | None = field(default=None)
 
     # Buy box
-    p_fulfiller_id: str | None = field(default=None)  # TODO: check if available
     p_fulfiller_name: str | None = field(default=None)  # "Versand", "Dispatches from"
     p_merchant_id: str | None = field(default=None)  # aka seller_id
     p_merchant_name: str | None = field(default=None)  # "Verkäufer", "Sold by"
 
     # Best seller rank
     p_bestseller_rank: str | None = field(default=None)
+
+    # Rating distribution
+    p_rating_1_star: str | None = field(default=None)
+    p_rating_2_star: str | None = field(default=None)
+    p_rating_3_star: str | None = field(default=None)
+    p_rating_4_star: str | None = field(default=None)
+    p_rating_5_star: str | None = field(default=None)

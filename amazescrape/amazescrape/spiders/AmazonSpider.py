@@ -32,6 +32,7 @@ class AmazonSpider(scrapy.Spider):
             "sb_status_prop": ".//span[@data-component-type='s-status-badge-component']//@data-component-props",
             "sb_status_text": ".//span[@data-component-type='s-status-badge-component']//@data-csa-c-badge-text",
             "sb_sponsored": ".//a[contains(@class, 'puis-sponsored-label-text')]//span[@class='a-color-secondary']/text()",
+            "sb_last_bought": ".//span[@class='a-size-base a-color-secondary' and contains(text(), '+')]/text()",
             "sb_lightning_deal": ".//span[@data-a-badge-color='sx-lightning-deal-red']//span[@class='a-badge-text']//text()",
             "sb_promotion": ".//span[@class='a-size-base s-highlighted-text-padding aok-inline-block s-promotion-highlight-color']/text()",
             "sb_prime": ".//i[contains(@class, 'a-icon-prime')]/@aria-label",
@@ -56,6 +57,11 @@ class AmazonSpider(scrapy.Spider):
                 "//div[@id='productDetails_db_sections']//table[@id='productDetails_detailBullets_sections1']//th[contains(text(), 'Best')]/following-sibling::td/span",
             ),
             ("p_bestseller_rank", "//div[@id='detailBulletsWrapper_feature_div']/ul[1]/li/span[@class='a-list-item']"),
+            ("p_rating_1_star", "//table[@id='histogramTable']//tr[5]//a[contains(text(), '%')]/text()"),
+            ("p_rating_2_star", "//table[@id='histogramTable']//tr[4]//a[contains(text(), '%')]/text()"),
+            ("p_rating_3_star", "//table[@id='histogramTable']//tr[3]//a[contains(text(), '%')]/text()"),
+            ("p_rating_4_star", "//table[@id='histogramTable']//tr[2]//a[contains(text(), '%')]/text()"),
+            ("p_rating_5_star", "//table[@id='histogramTable']//tr[1]//a[contains(text(), '%')]/text()"),
         ]
 
     def read_scraping_infos(self):
