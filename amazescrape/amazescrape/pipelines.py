@@ -53,6 +53,10 @@ class AmazonItemPipeline:
         if amazon_item.sb_status_prop is not None:
             amazon_item.sb_status_prop = json.loads(amazon_item.sb_status_prop)["badgeType"]
 
+        # Transform bought last month
+        if amazon_item.sb_bought_last_month is not None:
+            amazon_item.sb_bought_last_month = self.get_digits(amazon_item.sb_bought_last_month)
+
         # Transform the best seller rank
         if amazon_item.p_bestseller_rank is not None:
             bsr_str = amazon_item.p_bestseller_rank
@@ -82,7 +86,7 @@ class SQLitePipeline:
                 prefix TEXT,
                 suffix TEXT,
                 url TEXT,
-                request_timestamp TEXT,
+                s_timestamp TEXT,
                 asin TEXT,
                 name TEXT,
                 image_filename TEXT,
@@ -99,7 +103,7 @@ class SQLitePipeline:
                 sb_status_prop TEXT,
                 sb_status_text TEXT,
                 sb_sponsored TEXT,
-                sb_last_bought TEXT,
+                sb_bought_last_month TEXT,
                 sb_lightning_deal TEXT,
                 sb_promotion TEXT,
                 sb_prime TEXT,
@@ -108,6 +112,7 @@ class SQLitePipeline:
                 sb_other_02 TEXT,
                 sb_other_03 TEXT,
                 p_url TEXT,
+                p_timestamp TEXT,
                 p_fulfiller_name TEXT,
                 p_merchant_id TEXT,
                 p_merchant_name TEXT,
@@ -124,17 +129,18 @@ class SQLitePipeline:
     def process_item(self, item, spider):
         # Serialize list and datetime fields
         image_urls = ','.join(item.image_urls) if item.image_urls else None
-        request_timestamp = item.request_timestamp.isoformat() if item.request_timestamp else None
+        s_timestamp = item.s_timestamp.isoformat() if item.s_timestamp else None
+        p_timestamp = item.p_timestamp.isoformat() if item.p_timestamp else None
 
         self.cur.execute(
             """
-            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 item.prefix,
                 item.suffix,
                 item.url,
-                request_timestamp,
+                s_timestamp,
                 item.asin,
                 item.name,
                 item.image_filename,
@@ -151,7 +157,7 @@ class SQLitePipeline:
                 item.sb_status_prop,
                 item.sb_status_text,
                 item.sb_sponsored,
-                item.sb_last_bought,
+                item.sb_bought_last_month,
                 item.sb_lightning_deal,
                 item.sb_promotion,
                 item.sb_prime,
@@ -160,6 +166,7 @@ class SQLitePipeline:
                 item.sb_other_02,
                 item.sb_other_03,
                 item.p_url,
+                p_timestamp,
                 item.p_fulfiller_name,
                 item.p_merchant_id,
                 item.p_merchant_name,

@@ -32,7 +32,7 @@ class AmazonSpider(scrapy.Spider):
             "sb_status_prop": ".//span[@data-component-type='s-status-badge-component']//@data-component-props",
             "sb_status_text": ".//span[@data-component-type='s-status-badge-component']//@data-csa-c-badge-text",
             "sb_sponsored": ".//a[contains(@class, 'puis-sponsored-label-text')]//span[@class='a-color-secondary']/text()",
-            "sb_last_bought": ".//span[@class='a-size-base a-color-secondary' and contains(text(), '+')]/text()",
+            "sb_bought_last_month": ".//span[@class='a-size-base a-color-secondary' and contains(text(), '+')]/text()",
             "sb_lightning_deal": ".//span[@data-a-badge-color='sx-lightning-deal-red']//span[@class='a-badge-text']//text()",
             "sb_promotion": ".//span[@class='a-size-base s-highlighted-text-padding aok-inline-block s-promotion-highlight-color']/text()",
             "sb_prime": ".//i[contains(@class, 'a-icon-prime')]/@aria-label",
@@ -77,7 +77,6 @@ class AmazonSpider(scrapy.Spider):
 
     def start_requests(self) -> Request:
         for scraping_info in self.scraping_infos:
-            scraping_info.request_timestamp = datetime.now()
             yield scrapy.Request(
                 url=scraping_info.url, callback=self.parse_search_page, meta={"scraping_info": scraping_info}
             )
@@ -93,6 +92,7 @@ class AmazonSpider(scrapy.Spider):
 
         self.logger.info(f"Found {len(search_results)} search results on {response.url}")
         scraping_info = response.meta.get('scraping_info')
+        scraping_info.s_timestamp = datetime.now()
 
         for search_result in search_results:
             amazon_item = self.load_amazon_search_item(search_result, scraping_info)
@@ -123,6 +123,7 @@ class AmazonSpider(scrapy.Spider):
 
     def parse_product_page(self, response: Response) -> AmazonItem:
         amazon_item = response.meta.get("amazon_item")
+        amazon_item.p_timestamp = datetime.now()
         if amazon_item:
             amazon_item = self.load_amazon_product_page(amazon_item, response)
             yield amazon_item
@@ -141,7 +142,7 @@ class AmazonSpider(scrapy.Spider):
             item_loader.add_value("prefix", scraping_info.prefix)
             item_loader.add_value("suffix", scraping_info.suffix)
             item_loader.add_value("url", scraping_info.url)
-            item_loader.add_value("request_timestamp", scraping_info.request_timestamp)
+            item_loader.add_value("s_timestamp", scraping_info.s_timestamp)
 
         item_loader.add_value(
             "s_display", "list" if (int('sg-col-20-of-24' in response.xpath("@class").get())) else "grid"
@@ -160,6 +161,7 @@ class AmazonSpider(scrapy.Spider):
         if buy_box_element:
             for field, xpath in self.get_product_page_field_mappings():
                 item_loader.add_xpath(field, xpath)
+
 
         amazonItem = item_loader.load_item()
         amazonItem.image_urls = [amazonItem.image_urls]  # ImagePipeline expects a list

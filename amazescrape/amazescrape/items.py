@@ -14,7 +14,7 @@ class AmazonScrapingInfo:
     prefix: str | None = field(default=None)
     suffix: str | None = field(default=None)
     url: str | None = field(default=None)
-    request_timestamp: datetime | None = field(default=None)
+    s_timestamp: datetime | None = field(default=None)
 
 
 @dataclass
@@ -26,7 +26,7 @@ class AmazonItem:
     prefix: str | None = field(default=None)
     suffix: str | None = field(default=None)
     url: str | None = field(default=None)
-    request_timestamp: datetime | None = field(default=None)
+    s_timestamp: datetime | None = field(default=None)
 
     # Basic info about the product
     asin: str | None = field(default=None)
@@ -65,7 +65,7 @@ class AmazonItem:
     sb_status_prop: str | None = field(default=None)
     sb_status_text: str | None = field(default=None)
     sb_sponsored: str | None = field(default=None)
-    sb_last_bought: str | None = field(default=None)
+    sb_bought_last_month: str | None = field(default=None)
     sb_lightning_deal: str | None = field(default=None)
     sb_promotion: str | None = field(default=None)
     sb_prime: str | None = field(default=None)
@@ -79,6 +79,7 @@ class AmazonItem:
     # PRODUCT DETAIL PAGE (PDP) INFORMATION
     # Basic information
     p_url: str | None = field(default=None)
+    p_timestamp: datetime | None = field(default=None)
 
     # Buy box
     p_fulfiller_name: str | None = field(default=None)  # "Versand", "Dispatches from"
