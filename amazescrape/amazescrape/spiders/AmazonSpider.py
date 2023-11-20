@@ -36,6 +36,7 @@ class AmazonSpider(scrapy.Spider):
             "sb_promotion": ".//span[@class='a-size-base s-highlighted-text-padding aok-inline-block s-promotion-highlight-color']/text()",
             "sb_prime": ".//i[contains(@class, 'a-icon-prime')]/@aria-label",
             "sb_coupon": ".//span[@class='s-coupon-unclipped']//span[contains(@class, 's-coupon-highlight-color')]/text()",
+            "sb_other_01": ".//span[@id='BLACK_FRIDAY']/@id",
         }
 
     @staticmethod

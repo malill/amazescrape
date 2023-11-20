@@ -103,6 +103,9 @@ class SQLitePipeline:
                 sb_promotion TEXT,
                 sb_prime TEXT,
                 sb_coupon TEXT,
+                sb_other_01 TEXT,
+                sb_other_02 TEXT,
+                sb_other_03 TEXT,
                 p_url TEXT,
                 p_fulfiller_id TEXT,
                 p_fulfiller_name TEXT,
@@ -120,7 +123,7 @@ class SQLitePipeline:
 
         self.cur.execute(
             """
-            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 item.prefix,
@@ -147,6 +150,9 @@ class SQLitePipeline:
                 item.sb_promotion,
                 item.sb_prime,
                 item.sb_coupon,
+                item.sb_other_01,
+                item.sb_other_02,
+                item.sb_other_03,
                 item.p_url,
                 item.p_fulfiller_id,
                 item.p_fulfiller_name,

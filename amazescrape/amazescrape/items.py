@@ -70,6 +70,11 @@ class AmazonItem:
     sb_prime: str | None = field(default=None)
     sb_coupon: str | None = field(default=None)
 
+    # Other bagdes
+    sb_other_01: str | None = field(default=None)
+    sb_other_02: str | None = field(default=None)
+    sb_other_03: str | None = field(default=None)
+
     # PRODUCT DETAIL PAGE (PDP) INFORMATION
     # Basic information
     p_url: str | None = field(default=None)
