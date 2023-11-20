@@ -63,6 +63,14 @@ class AmazonItemPipeline:
             doc = document_fromstring(bsr_str)
             amazon_item.p_bestseller_rank = doc.text_content().strip()
 
+        # Transform the p_review_*_rating
+        if amazon_item.p_review_1_rating is not None:
+            amazon_item.p_review_1_rating = self.get_digits(amazon_item.p_review_1_rating)
+        if amazon_item.p_review_2_rating is not None:
+            amazon_item.p_review_2_rating = self.get_digits(amazon_item.p_review_2_rating)
+        if amazon_item.p_review_3_rating is not None:
+            amazon_item.p_review_3_rating = self.get_digits(amazon_item.p_review_3_rating)
+
         return amazon_item
 
     def get_digits(self, text_content: str) -> str:
@@ -121,7 +129,16 @@ class SQLitePipeline:
                 p_rating_2_star TEXT,
                 p_rating_3_star TEXT,
                 p_rating_4_star TEXT,
-                p_rating_5_star TEXT
+                p_rating_5_star TEXT,
+                p_review_1_rating TEXT,
+                p_review_1_title TEXT,
+                p_review_1_text TEXT,
+                p_review_2_rating TEXT,
+                p_review_2_title TEXT,
+                p_review_2_text TEXT,
+                p_review_3_rating TEXT,
+                p_review_3_title TEXT,
+                p_review_3_text TEXT
             )
             """
         )
@@ -134,7 +151,7 @@ class SQLitePipeline:
 
         self.cur.execute(
             """
-            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 item.prefix,
@@ -176,6 +193,15 @@ class SQLitePipeline:
                 item.p_rating_3_star,
                 item.p_rating_4_star,
                 item.p_rating_5_star,
+                item.p_review_1_rating,
+                item.p_review_1_title,
+                item.p_review_1_text,
+                item.p_review_2_rating,
+                item.p_review_2_title,
+                item.p_review_2_text,
+                item.p_review_3_rating,
+                item.p_review_3_title,
+                item.p_review_3_text,
             ),
         )
 

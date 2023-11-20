@@ -41,7 +41,7 @@ class AmazonSpider(scrapy.Spider):
         }
 
     @staticmethod
-    def get_product_page_field_mappings() -> list[tuple[str, str]]:
+    def get_buybox_mappings() -> list[tuple[str, str]]:
         return [
             ("p_merchant_id", "//*[@id='merchantID']/@value"),
             (
@@ -52,16 +52,58 @@ class AmazonSpider(scrapy.Spider):
                 "p_fulfiller_name",
                 "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-fulfiller-info'][2]//span//text()",
             ),
+        ]
+
+    @staticmethod
+    def get_best_seller_mappings() -> list[tuple[str, str]]:
+        return [
             (
                 "p_bestseller_rank",
                 "//div[@id='productDetails_db_sections']//table[@id='productDetails_detailBullets_sections1']//th[contains(text(), 'Best')]/following-sibling::td/span",
             ),
             ("p_bestseller_rank", "//div[@id='detailBulletsWrapper_feature_div']/ul[1]/li/span[@class='a-list-item']"),
+        ]
+
+    @staticmethod
+    def get_rating_mappings() -> list[tuple[str, str]]:
+        return [
             ("p_rating_1_star", "//table[@id='histogramTable']//tr[5]//a[contains(text(), '%')]/text()"),
             ("p_rating_2_star", "//table[@id='histogramTable']//tr[4]//a[contains(text(), '%')]/text()"),
             ("p_rating_3_star", "//table[@id='histogramTable']//tr[3]//a[contains(text(), '%')]/text()"),
             ("p_rating_4_star", "//table[@id='histogramTable']//tr[2]//a[contains(text(), '%')]/text()"),
             ("p_rating_5_star", "//table[@id='histogramTable']//tr[1]//a[contains(text(), '%')]/text()"),
+        ]
+
+    @staticmethod
+    def get_review_mappings() -> list[tuple[str, str]]:
+        return [
+            ("p_review_1_rating", "//div[@id='cm-cr-dp-review-list']/div[1]//a[@data-hook='review-title']//i/@class"),
+            (
+                "p_review_1_title",
+                "//div[@id='cm-cr-dp-review-list']/div[1]//a[@data-hook='review-title']/span[last()]/text()",
+            ),
+            (
+                "p_review_1_text",
+                "//div[@id='cm-cr-dp-review-list']/div[1]//span[@data-hook='review-body']//div[contains(@class, 'reviewText')]//span/text()[1]",
+            ),
+            ("p_review_2_rating", "//div[@id='cm-cr-dp-review-list']/div[2]//a[@data-hook='review-title']//i/@class"),
+            (
+                "p_review_2_title",
+                "//div[@id='cm-cr-dp-review-list']/div[2]//a[@data-hook='review-title']/span[last()]/text()",
+            ),
+            (
+                "p_review_2_text",
+                "//div[@id='cm-cr-dp-review-list']/div[2]//span[@data-hook='review-body']//div[contains(@class, 'reviewText')]//span/text()[1]",
+            ),
+            ("p_review_3_rating", "//div[@id='cm-cr-dp-review-list']/div[3]//a[@data-hook='review-title']//i/@class"),
+            (
+                "p_review_3_title",
+                "//div[@id='cm-cr-dp-review-list']/div[3]//a[@data-hook='review-title']/span[last()]/text()",
+            ),
+            (
+                "p_review_3_text",
+                "//div[@id='cm-cr-dp-review-list']/div[3]//span[@data-hook='review-body']//div[contains(@class, 'reviewText')]//span/text()[1]",
+            ),
         ]
 
     def read_scraping_infos(self):
@@ -157,11 +199,21 @@ class AmazonSpider(scrapy.Spider):
         item_loader.add_value("p_url", response.url)
 
         buy_box_element = response.xpath("//div[@id='offer-display-features']")
-
         if buy_box_element:
-            for field, xpath in self.get_product_page_field_mappings():
+            for field, xpath in self.get_buybox_mappings():
                 item_loader.add_xpath(field, xpath)
 
+        for field, xpath in self.get_best_seller_mappings():
+            item_loader.add_xpath(field, xpath)
+
+        for field, xpath in self.get_rating_mappings():
+            item_loader.add_xpath(field, xpath)
+
+        review_element = response.xpath("//div[@id='cm-cr-dp-review-list']")
+
+        if review_element:
+            for field, xpath in self.get_review_mappings():
+                item_loader.add_xpath(field, xpath)
 
         amazonItem = item_loader.load_item()
         amazonItem.image_urls = [amazonItem.image_urls]  # ImagePipeline expects a list

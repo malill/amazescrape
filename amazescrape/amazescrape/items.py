@@ -95,3 +95,14 @@ class AmazonItem:
     p_rating_3_star: str | None = field(default=None)
     p_rating_4_star: str | None = field(default=None)
     p_rating_5_star: str | None = field(default=None)
+
+    # Reviews
+    p_review_1_rating: str | None = field(default=None)
+    p_review_1_title: str | None = field(default=None)
+    p_review_1_text: str | None = field(default=None)
+    p_review_2_rating: str | None = field(default=None)
+    p_review_2_title: str | None = field(default=None)
+    p_review_2_text: str | None = field(default=None)
+    p_review_3_rating: str | None = field(default=None)
+    p_review_3_title: str | None = field(default=None)
+    p_review_3_text: str | None = field(default=None)
