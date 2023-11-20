@@ -37,6 +37,9 @@ class AmazonItem:
     images: None = field(default=None)
     image_filename: str | None = field(default=None)
 
+    # List or grid
+    s_display: str | None = field(default=None)
+
     # Rating
     s_rating_avg: str | None = field(default=None)
     s_rating_n: str | None = field(default=None)
@@ -76,3 +79,6 @@ class AmazonItem:
     p_fulfiller_name: str | None = field(default=None)  # "Versand", "Dispatches from"
     p_merchant_id: str | None = field(default=None)  # aka seller_id
     p_merchant_name: str | None = field(default=None)  # "Verkäufer", "Sold by"
+
+    # Best seller rank
+    p_bestseller_rank: str | None = field(default=None)

@@ -2,6 +2,8 @@ import json
 from pathlib import PurePosixPath
 from urllib.parse import urlparse
 
+from lxml.html import document_fromstring
+
 from scrapy.pipelines.images import ImagesPipeline
 from amazescrape.spiders.AmazonSpider import AmazonSpider
 from amazescrape.items import AmazonItem
@@ -51,6 +53,12 @@ class AmazonItemPipeline:
         if amazon_item.sb_status_prop is not None:
             amazon_item.sb_status_prop = json.loads(amazon_item.sb_status_prop)["badgeType"]
 
+        # Transform the best seller rank
+        if amazon_item.p_bestseller_rank is not None:
+            bsr_str = amazon_item.p_bestseller_rank
+            doc = document_fromstring(bsr_str)
+            amazon_item.p_bestseller_rank = doc.text_content().strip()
+
         return amazon_item
 
     def get_digits(self, text_content: str) -> str:
@@ -78,6 +86,7 @@ class SQLitePipeline:
                 asin TEXT,
                 name TEXT,
                 image_filename TEXT,
+                s_display TEXT,
                 s_rating_avg INTEGER,
                 s_rating_n INTEGER,
                 s_price INTEGER,
@@ -98,7 +107,8 @@ class SQLitePipeline:
                 p_fulfiller_id TEXT,
                 p_fulfiller_name TEXT,
                 p_merchant_id TEXT,
-                p_merchant_name TEXT
+                p_merchant_name TEXT,
+                p_bestseller_rank TEXT
             )
             """
         )
@@ -110,7 +120,7 @@ class SQLitePipeline:
 
         self.cur.execute(
             """
-            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 item.prefix,
@@ -120,6 +130,7 @@ class SQLitePipeline:
                 item.asin,
                 item.name,
                 item.image_filename,
+                item.s_display,
                 item.s_rating_avg,
                 item.s_rating_n,
                 item.s_price,
@@ -141,6 +152,7 @@ class SQLitePipeline:
                 item.p_fulfiller_name,
                 item.p_merchant_id,
                 item.p_merchant_name,
+                item.p_bestseller_rank,
             ),
         )
 

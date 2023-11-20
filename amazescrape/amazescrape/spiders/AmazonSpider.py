@@ -39,12 +39,23 @@ class AmazonSpider(scrapy.Spider):
         }
 
     @staticmethod
-    def get_product_page_field_mappings() -> dict[str, str]:
-        return {
-            "p_merchant_id": "//*[@id='merchantID']/@value",
-            "p_merchant_name": "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-merchant-info'][2]//span//text()",
-            "p_fulfiller_name": "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-fulfiller-info'][2]//span//text()",
-        }
+    def get_product_page_field_mappings() -> list[tuple[str, str]]:
+        return [
+            ("p_merchant_id", "//*[@id='merchantID']/@value"),
+            (
+                "p_merchant_name",
+                "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-merchant-info'][2]//span//text()",
+            ),
+            (
+                "p_fulfiller_name",
+                "//div[@id='offer-display-features']//div[@offer-display-feature-name='desktop-fulfiller-info'][2]//span//text()",
+            ),
+            (
+                "p_bestseller_rank",
+                "//div[@id='productDetails_db_sections']//table[@id='productDetails_detailBullets_sections1']//th[contains(text(), 'Best')]/following-sibling::td/span",
+            ),
+            ("p_bestseller_rank", "//div[@id='detailBulletsWrapper_feature_div']/ul[1]/li/span[@class='a-list-item']"),
+        ]
 
     def read_scraping_infos(self):
         filepath = "../res/mock_urls.csv"
@@ -68,7 +79,6 @@ class AmazonSpider(scrapy.Spider):
         search_results = response.xpath(
             "//div[@data-asin and @data-index and @data-uuid and @data-component-type='s-search-result']"
         )
-        # TODO: what about carousels?
 
         if not search_results:
             self.logger.warning(f"No search results found on {response.url}")
@@ -81,10 +91,13 @@ class AmazonSpider(scrapy.Spider):
             amazon_item = self.load_amazon_search_item(search_result, scraping_info)
             product_url = search_result.xpath(".//h2//a[contains(@class, 'a-link-normal')]/@href")
 
+            # if product_url contains "sspa" get only the link
+
             if product_url:
                 url = product_url[0].get()
                 if url is not None:
-                    # follow
+                    if "sspa" in url:
+                        url = "/dp/" + amazon_item.asin
                     amazon_item.p_url = url
                     yield response.follow(
                         url,
@@ -123,6 +136,9 @@ class AmazonSpider(scrapy.Spider):
             item_loader.add_value("url", scraping_info.url)
             item_loader.add_value("request_timestamp", scraping_info.request_timestamp)
 
+        item_loader.add_value(
+            "s_display", "list" if (int('sg-col-20-of-24' in response.xpath("@class").get())) else "grid"
+        )
         amazonItem = item_loader.load_item()
         amazonItem.image_urls = [amazonItem.image_urls]  # ImagePipeline expects a list
 
@@ -135,7 +151,7 @@ class AmazonSpider(scrapy.Spider):
         buy_box_element = response.xpath("//div[@id='offer-display-features']")
 
         if buy_box_element:
-            for field, xpath in self.get_product_page_field_mappings().items():
+            for field, xpath in self.get_product_page_field_mappings():
                 item_loader.add_xpath(field, xpath)
 
         amazonItem = item_loader.load_item()
