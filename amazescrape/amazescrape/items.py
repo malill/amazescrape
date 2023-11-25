@@ -19,7 +19,7 @@ class AmazonScrapingInfo:
 
 @dataclass
 class AmazonItem:
-    """Contains information about a single product."""
+    '''Contains information about a single product.'''
 
     # PRODUCT SEARCH PAGE (PSP) INFORMATION
     # Scraping information
