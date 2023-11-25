@@ -27,6 +27,19 @@ class AmazonItemPipeline:
     '''Pipeline for processing scraped values.'''
 
     def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
+        '''Processes scraped values.
+
+        Args:
+            amazon_item (AmazonItem): The scraped item to process.
+            spider (AmazonSpider): The spider that scraped the item.
+
+        Raises:
+            DropItem: If there is an error processing the item.
+            DropItem: If the item does not have an ASIN.
+
+        Returns:
+            AmazonItem: The processed item.
+        '''
         try:
             # List of fields to process with get_digits function
             digit_fields = [
@@ -69,17 +82,26 @@ class AmazonItemPipeline:
         return amazon_item
 
     def get_digits(self, text_content: str) -> str:
+        '''Extracts digits from a string.
+
+        Args:
+            text_content (str): The string to extract digits from.
+
+        Returns:
+            str: The extracted digits.
+        '''
         return ''.join(filter(lambda x: x.isdigit(), text_content))
 
 
 class SQLitePipeline:
     def __init__(self) -> None:
+        '''Initializes the SQLite pipeline.'''
         self.con = sqlite3.connect('../res/amazescrape.db')
         self.cur = self.con.cursor()
         self.create_table()
 
     def create_table(self) -> None:
-        # Create table with fields corresponding to AmazonItem
+        '''Creates the database table if it does not exist.'''
         self.cur.execute(
             """
             CREATE TABLE IF NOT EXISTS amazon_items(
@@ -136,6 +158,18 @@ class SQLitePipeline:
         )
 
     def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
+        '''Inserts scraped item into database.
+
+        Args:
+            amazon_item (AmazonItem): The scraped item to insert into the database.
+            spider (AmazonSpider): The spider that scraped the item.
+
+        Raises:
+            DropItem: If there is an error inserting the item into the database.
+
+        Returns:
+            AmazonItem: The persisted item.
+        '''
         try:
             # Serialize list and datetime fields
             s_timestamp = amazon_item.s_timestamp.isoformat() if amazon_item.s_timestamp else None
@@ -204,4 +238,9 @@ class SQLitePipeline:
         return amazon_item
 
     def close_spider(self, spider: AmazonSpider) -> None:
+        '''Closes the database connection.
+
+        Args:
+            spider (AmazonSpider): The spider that scraped the item.
+        '''
         self.con.close()

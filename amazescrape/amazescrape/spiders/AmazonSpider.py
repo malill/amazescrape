@@ -11,10 +11,16 @@ class AmazonSpider(scrapy.Spider):
     name = "amazon"
 
     def __init__(self, *args, **kwargs):
+        '''Initializes the spider.'''
         super().__init__(*args, **kwargs)
         self.scraping_infos = self.read_scraping_infos()
 
     def get_xpath_search_mappings(self) -> dict[str, list]:
+        '''Returns the mappings of fields to XPath expressions for the search page.
+
+        Returns:
+            dict[str, list]: The mappings of fields to XPath expressions for the search page.
+        '''
         return {
             "asin": ["./@data-asin"],
             "name": [".//h2//text()"],
@@ -54,6 +60,11 @@ class AmazonSpider(scrapy.Spider):
         }
 
     def get_xpath_product_page_mappings(self) -> dict[str, list]:
+        '''Returns the mappings of fields to XPath expressions for the product page.
+
+        Returns:
+            dict[str, list]: The mappings of fields to XPath expressions for the product page.
+        '''
         return {
             "p_merchant_id": ["//*[@id='merchantID']/@value"],
             "p_merchant_name": [
@@ -95,6 +106,11 @@ class AmazonSpider(scrapy.Spider):
         }
 
     def read_scraping_infos(self):
+        '''Reads the scraping infos from the CSV file.
+
+        Returns:
+            _type_: The scraping infos.
+        '''
         filepath = "../res/mock_urls.csv"
         try:
             with open(filepath, "r") as f:
@@ -106,12 +122,31 @@ class AmazonSpider(scrapy.Spider):
             return []
 
     def start_requests(self) -> Request:
+        '''Returns the initial requests to crawl.
+
+        Returns:
+            Request: The initial requests to crawl.
+
+        Yields:
+            Iterator[Request]: The initial requests to crawl.
+        '''
         for scraping_info in self.scraping_infos:
             yield scrapy.Request(
                 url=scraping_info.url, callback=self.parse_search_page, meta={"scraping_info": scraping_info}
             )
 
     def parse_search_page(self, response: Response) -> AmazonItem:
+        '''Parses the search page.
+
+        Args:
+            response (Response): The response to parse.
+
+        Returns:
+            AmazonItem: The scraped item.
+
+        Yields:
+            Iterator[AmazonItem]: The scraped item.
+        '''
         response.meta.get("scraping_info").s_timestamp = datetime.now()
         search_results = response.xpath(
             "//div[@data-asin and @data-index and @data-uuid and @data-component-type='s-search-result']"
@@ -127,6 +162,15 @@ class AmazonSpider(scrapy.Spider):
             yield from self.process_search_result(search_result, response)
 
     def process_search_result(self, search_result, response: Response):
+        '''Processes a search result.
+
+        Args:
+            search_result (_type_): The search result to process.
+            response (Response): The response to parse.
+
+        Yields:
+            _type_: The scraped item.
+        '''
         amazon_item = self.load_amazon_search_item(search_result, response.meta.get('scraping_info'))
         product_url = self.extract_product_url(search_result, amazon_item)
 
@@ -142,6 +186,15 @@ class AmazonSpider(scrapy.Spider):
             yield amazon_item
 
     def load_amazon_search_item(self, response: Response, scraping_info: AmazonScrapingInfo) -> AmazonItem:
+        '''Loads an Amazon item from the search page.
+
+        Args:
+            response (Response): The response to parse.
+            scraping_info (AmazonScrapingInfo): The scraping info.
+
+        Returns:
+            AmazonItem: The scraped item.
+        '''
         item_loader = AmazonItemLoader(item=AmazonItem(), selector=response)
 
         for field, xpath in self.get_xpath_search_mappings().items():
@@ -162,12 +215,32 @@ class AmazonSpider(scrapy.Spider):
         return amazonItem
 
     def extract_product_url(self, search_result, amazon_item):
+        '''Extracts the product URL from the search result.
+
+        Args:
+            search_result (_type_): The search result to process.
+            amazon_item (_type_): The Amazon item.
+
+        Returns:
+            _type_: The product URL.
+        '''
         product_url = search_result.xpath(".//h2//a[contains(@class, 'a-link-normal')]/@href").get()
         if product_url and "sspa" in product_url:
             return f"/dp/{amazon_item.asin}"
         return product_url
 
     def parse_product_page(self, response: Response) -> AmazonItem:
+        '''Parses the product page.
+
+        Args:
+            response (Response): The response to parse.
+
+        Returns:
+            AmazonItem: The scraped item.
+
+        Yields:
+            Iterator[AmazonItem]: The scraped item.
+        '''
         amazon_item = response.meta.get("amazon_item")
         amazon_item.p_timestamp = datetime.now()
         if amazon_item:
@@ -177,6 +250,15 @@ class AmazonSpider(scrapy.Spider):
             self.logger.error("Amazon item not found in response meta.")
 
     def load_amazon_product_page(self, amazon_item: AmazonItem, response: Response) -> AmazonItem:
+        '''Loads an Amazon item from the product page.
+
+        Args:
+            amazon_item (AmazonItem): The Amazon item.
+            response (Response): The response to parse.
+
+        Returns:
+            AmazonItem: The scraped item.
+        '''
         item_loader = AmazonItemLoader(item=amazon_item, selector=response)
         item_loader.add_value("p_url", response.url)
 
@@ -189,5 +271,13 @@ class AmazonSpider(scrapy.Spider):
         return amazonItem
 
     def handle_request_failure(self, failure):
+        '''Handles a request failure.
+
+        Args:
+            failure (_type_): The failure.
+
+        Yields:
+            _type_: The fallback item.
+        '''
         self.logger.error(f"Request failed: {failure.request.url}")
         yield failure.request.meta.get('fallback_item')
