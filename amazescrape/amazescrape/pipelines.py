@@ -175,62 +175,67 @@ class SQLitePipeline:
             s_timestamp = amazon_item.s_timestamp.isoformat() if amazon_item.s_timestamp else None
             p_timestamp = amazon_item.p_timestamp.isoformat() if amazon_item.p_timestamp else None
 
-            self.cur.execute(
-                """
-                INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    amazon_item.prefix,
-                    amazon_item.suffix,
-                    amazon_item.url,
-                    s_timestamp,
-                    amazon_item.asin,
-                    amazon_item.name,
-                    amazon_item.image_filename,
-                    amazon_item.s_display,
-                    amazon_item.s_rating_avg,
-                    amazon_item.s_rating_n,
-                    amazon_item.s_price,
-                    amazon_item.s_price_strike,
-                    amazon_item.s_rank,
-                    amazon_item.s_delivery,
-                    amazon_item.s_left_in_stock,
-                    amazon_item.s_other_price_min,
-                    amazon_item.s_other_n,
-                    amazon_item.sb_status_prop,
-                    amazon_item.sb_status_text,
-                    amazon_item.sb_sponsored,
-                    amazon_item.sb_bought_last_month,
-                    amazon_item.sb_lightning_deal,
-                    amazon_item.sb_promotion,
-                    amazon_item.sb_prime,
-                    amazon_item.sb_coupon,
-                    amazon_item.sb_other_01,
-                    amazon_item.sb_other_02,
-                    amazon_item.sb_other_03,
-                    amazon_item.p_url,
-                    p_timestamp,
-                    amazon_item.p_fulfiller_name,
-                    amazon_item.p_merchant_id,
-                    amazon_item.p_merchant_name,
-                    amazon_item.p_bestseller_rank,
-                    amazon_item.p_rating_1_star,
-                    amazon_item.p_rating_2_star,
-                    amazon_item.p_rating_3_star,
-                    amazon_item.p_rating_4_star,
-                    amazon_item.p_rating_5_star,
-                    amazon_item.p_review_1_rating,
-                    amazon_item.p_review_1_title,
-                    amazon_item.p_review_1_text,
-                    amazon_item.p_review_2_rating,
-                    amazon_item.p_review_2_title,
-                    amazon_item.p_review_2_text,
-                    amazon_item.p_review_3_rating,
-                    amazon_item.p_review_3_title,
-                    amazon_item.p_review_3_text,
-                ),
-            )
+            # Prepare data for insertion
+            item_data = {
+                'prefix': amazon_item.prefix,
+                'suffix': amazon_item.suffix,
+                'url': amazon_item.url,
+                's_timestamp': s_timestamp,
+                'asin': amazon_item.asin,
+                'name': amazon_item.name,
+                'image_filename': amazon_item.image_filename,
+                's_display': amazon_item.s_display,
+                's_rating_avg': amazon_item.s_rating_avg,
+                's_rating_n': amazon_item.s_rating_n,
+                's_price': amazon_item.s_price,
+                's_price_strike': amazon_item.s_price_strike,
+                's_rank': amazon_item.s_rank,
+                's_delivery': amazon_item.s_delivery,
+                's_left_in_stock': amazon_item.s_left_in_stock,
+                's_other_price_min': amazon_item.s_other_price_min,
+                's_other_n': amazon_item.s_other_n,
+                'sb_status_prop': amazon_item.sb_status_prop,
+                'sb_status_text': amazon_item.sb_status_text,
+                'sb_sponsored': amazon_item.sb_sponsored,
+                'sb_bought_last_month': amazon_item.sb_bought_last_month,
+                'sb_lightning_deal': amazon_item.sb_lightning_deal,
+                'sb_promotion': amazon_item.sb_promotion,
+                'sb_prime': amazon_item.sb_prime,
+                'sb_coupon': amazon_item.sb_coupon,
+                'sb_other_01': amazon_item.sb_other_01,
+                'sb_other_02': amazon_item.sb_other_02,
+                'sb_other_03': amazon_item.sb_other_03,
+                'p_url': amazon_item.p_url,
+                'p_timestamp': p_timestamp,
+                'p_fulfiller_name': amazon_item.p_fulfiller_name,
+                'p_merchant_id': amazon_item.p_merchant_id,
+                'p_merchant_name': amazon_item.p_merchant_name,
+                'p_bestseller_rank': amazon_item.p_bestseller_rank,
+                'p_rating_1_star': amazon_item.p_rating_1_star,
+                'p_rating_2_star': amazon_item.p_rating_2_star,
+                'p_rating_3_star': amazon_item.p_rating_3_star,
+                'p_rating_4_star': amazon_item.p_rating_4_star,
+                'p_rating_5_star': amazon_item.p_rating_5_star,
+                'p_review_1_rating': amazon_item.p_review_1_rating,
+                'p_review_1_title': amazon_item.p_review_1_title,
+                'p_review_1_text': amazon_item.p_review_1_text,
+                'p_review_2_rating': amazon_item.p_review_2_rating,
+                'p_review_2_title': amazon_item.p_review_2_title,
+                'p_review_2_text': amazon_item.p_review_2_text,
+                'p_review_3_rating': amazon_item.p_review_3_rating,
+                'p_review_3_title': amazon_item.p_review_3_title,
+                'p_review_3_text': amazon_item.p_review_3_text,
+            }
+
+            # Construct query with parameter substitution
+            fields = ', '.join(item_data.keys())
+            placeholders = ', '.join('?' * len(item_data))
+            query = f"INSERT INTO amazon_items ({fields}) VALUES ({placeholders})"
+
+            # Execute the query
+            self.cur.execute(query, tuple(item_data.values()))
             self.con.commit()
+
         except sqlite3.DatabaseError as e:
             logging.error(f"Error inserting item into database: {e}")
             raise DropItem(f"Error inserting item into database: {e}")
