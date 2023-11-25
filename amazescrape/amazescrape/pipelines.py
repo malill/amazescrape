@@ -1,4 +1,5 @@
 import json
+import sqlite3
 from pathlib import PurePosixPath
 from urllib.parse import urlparse
 
@@ -75,11 +76,6 @@ class AmazonItemPipeline:
 
     def get_digits(self, text_content: str) -> str:
         return ''.join(filter(lambda x: x.isdigit(), text_content))
-
-
-# pipelines.py
-
-import sqlite3
 
 
 class SQLitePipeline:
