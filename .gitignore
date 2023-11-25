@@ -134,6 +134,18 @@ venv.bak/
 ################################
 ########### VS CODE ############
 ################################
-.vscode
+.vscode/*
 *.code-workspace
 .history
+!.vscode/launch.json
+
+# Scrapy feed exports
+*/feed/*
+!*/feed/.gitkeep
+
+# Scrapy images
+*/images/*
+!*/images/.gitkeep
+
+# Scrapy database
+*.db
