@@ -19,8 +19,8 @@ class AmazonImagePipeline(ImagesPipeline):
         '''Returns the file path for storing the image. The image is stored in the `images` directory. The file name is
         the same as the original file name, that is extracted from the image URL.'''
         original_file_name = Path(urlparse(request.url).path).name
-        item.image_filename = original_file_name
-        return f'images/{original_file_name}'
+        item.s_image_filename = original_file_name
+        return f'{original_file_name}'
 
 
 class AmazonItemPipeline:
@@ -72,7 +72,7 @@ class AmazonItemPipeline:
                 amazon_item.p_bestseller_rank = doc.text_content().strip()
 
             # Ensure ASIN is present
-            if not amazon_item.asin:
+            if not amazon_item.s_asin:
                 raise DropItem("Missing ASIN in item")
 
         except Exception as e:
@@ -105,13 +105,13 @@ class SQLitePipeline:
         self.cur.execute(
             """
             CREATE TABLE IF NOT EXISTS amazon_items(
-                prefix TEXT,
-                suffix TEXT,
-                url TEXT,
+                search_term TEXT,
+                domain TEXT,
+                s_url TEXT,
                 s_timestamp TEXT,
-                asin TEXT,
-                name TEXT,
-                image_filename TEXT,
+                s_asin TEXT,
+                s_name TEXT,
+                s_image_filename TEXT,
                 s_display TEXT,
                 s_rating_avg INTEGER,
                 s_rating_n INTEGER,
@@ -177,13 +177,13 @@ class SQLitePipeline:
 
             # Prepare data for insertion
             item_data = {
-                'prefix': amazon_item.prefix,
-                'suffix': amazon_item.suffix,
-                'url': amazon_item.url,
+                'search_term': amazon_item.search_term,
+                'domain': amazon_item.domain,
+                's_url': amazon_item.s_url,
                 's_timestamp': s_timestamp,
-                'asin': amazon_item.asin,
-                'name': amazon_item.name,
-                'image_filename': amazon_item.image_filename,
+                's_asin': amazon_item.s_asin,
+                's_name': amazon_item.s_name,
+                's_image_filename': amazon_item.s_image_filename,
                 's_display': amazon_item.s_display,
                 's_rating_avg': amazon_item.s_rating_avg,
                 's_rating_n': amazon_item.s_rating_n,

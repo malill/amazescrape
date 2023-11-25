@@ -11,9 +11,9 @@ from datetime import datetime
 class AmazonScrapingInfo:
     """Contains information about the scraping process."""
 
-    prefix: str | None = field(default=None)
-    suffix: str | None = field(default=None)
-    url: str | None = field(default=None)
+    search_term: str | None = field(default=None)
+    domain: str | None = field(default=None)
+    s_url: str | None = field(default=None)
     s_timestamp: datetime | None = field(default=None)
 
 
@@ -23,19 +23,19 @@ class AmazonItem:
 
     # PRODUCT SEARCH PAGE (PSP) INFORMATION
     # Scraping information
-    prefix: str | None = field(default=None)
-    suffix: str | None = field(default=None)
-    url: str | None = field(default=None)
+    search_term: str | None = field(default=None)
+    domain: str | None = field(default=None)
+    s_url: str | None = field(default=None)
     s_timestamp: datetime | None = field(default=None)
 
     # Basic info about the product
-    asin: str | None = field(default=None)
-    name: str | None = field(default=None)
+    s_asin: str | None = field(default=None)
+    s_name: str | None = field(default=None)
 
     # Image
-    image_urls: list[str] | None = field(default=None)
-    images: None = field(default=None)
-    image_filename: str | None = field(default=None)
+    image_urls: list[str] | None = field(default=None)  # Needed for scrapy ImagesPipeline
+    images: None = field(default=None)  # Needed for scrapy ImagesPipeline
+    s_image_filename: str | None = field(default=None)
 
     # List or grid
     s_display: str | None = field(default=None)

@@ -22,8 +22,8 @@ class AmazonSpider(scrapy.Spider):
             dict[str, list]: The mappings of fields to XPath expressions for the search page.
         '''
         return {
-            "asin": ["./@data-asin"],
-            "name": [".//h2//text()"],
+            "s_asin": ["./@data-asin"],
+            "s_name": [".//h2//text()"],
             "image_urls": [".//img[@class='s-image']/@src"],
             "s_rating_avg": [".//span[@class='a-icon-alt']/text()"],
             "s_rating_n": [".//span[@class='a-size-base s-underline-text']/text()"],
@@ -132,7 +132,7 @@ class AmazonSpider(scrapy.Spider):
         '''
         for scraping_info in self.scraping_infos:
             yield scrapy.Request(
-                url=scraping_info.url, callback=self.parse_search_page, meta={"scraping_info": scraping_info}
+                url=scraping_info.s_url, callback=self.parse_search_page, meta={"scraping_info": scraping_info}
             )
 
     def parse_search_page(self, response: Response) -> AmazonItem:
@@ -201,9 +201,9 @@ class AmazonSpider(scrapy.Spider):
             item_loader.add_xpath(field, xpath)
 
         if scraping_info:
-            item_loader.add_value("prefix", scraping_info.prefix)
-            item_loader.add_value("suffix", scraping_info.suffix)
-            item_loader.add_value("url", scraping_info.url)
+            item_loader.add_value("search_term", scraping_info.search_term)
+            item_loader.add_value("domain", scraping_info.domain)
+            item_loader.add_value("s_url", scraping_info.s_url)
             item_loader.add_value("s_timestamp", scraping_info.s_timestamp)
 
         item_loader.add_value(
@@ -226,7 +226,7 @@ class AmazonSpider(scrapy.Spider):
         '''
         product_url = search_result.xpath(".//h2//a[contains(@class, 'a-link-normal')]/@href").get()
         if product_url and "sspa" in product_url:
-            return f"/dp/{amazon_item.asin}"
+            return f"/dp/{amazon_item.s_asin}"
         return product_url
 
     def parse_product_page(self, response: Response) -> AmazonItem:
