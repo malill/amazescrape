@@ -14,7 +14,21 @@ Currently, there is no proxy rotation implemented. However, it is planned to be 
 
 ### Random User Agent :bust_in_silhouette:
 
-This project uses a random user agent to avoid being banned by the websites that we're scraping.
+This project uses a random user agent to avoid being banned by the websites that we're scraping. The user agents are stored in a list in the `settings.py` file.
+
+The current user agents are:
+
+```python
+# Crawl responsibly by identifying yourself (and your website) on the user-agent
+USER_AGENT_LIST = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:88.0) Gecko/20100101 Chrome/100.0",
+]
+```
 
 ### Random Call Interval :alarm_clock:
 
