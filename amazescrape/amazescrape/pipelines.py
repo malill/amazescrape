@@ -1,16 +1,15 @@
 import json
+import logging
 import sqlite3
-from pathlib import PurePosixPath
+from pathlib import Path
 from urllib.parse import urlparse
 
 from lxml.html import document_fromstring
+from scrapy.exceptions import DropItem
 
 from scrapy.pipelines.images import ImagesPipeline
 from amazescrape.spiders.AmazonSpider import AmazonSpider
 from amazescrape.items import AmazonItem
-
-# TODO: store the scraped data in a database
-# TODO: store product images in file system (https://docs.scrapy.org/en/latest/topics/media-pipeline.html?highlight=image)
 
 
 class AmazonImagePipeline(ImagesPipeline):
@@ -19,58 +18,53 @@ class AmazonImagePipeline(ImagesPipeline):
     def file_path(self, request, response=None, info=None, *, item: AmazonItem = None):
         '''Returns the file path for storing the image. The image is stored in the `images` directory. The file name is
         the same as the original file name, that is extracted from the image URL.'''
-        original_file_name = PurePosixPath(urlparse(request.url).path).name
+        original_file_name = Path(urlparse(request.url).path).name
         item.image_filename = original_file_name
-        return original_file_name
+        return f'images/{original_file_name}'
 
 
 class AmazonItemPipeline:
     '''Pipeline for processing scraped values.'''
 
     def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
-        # Transform the rating
-        if amazon_item.s_rating_avg is not None:
-            amazon_item.s_rating_avg = ''.join(filter(lambda x: x.isdigit(), amazon_item.s_rating_avg[:3]))
-        if amazon_item.s_rating_n is not None:
-            amazon_item.s_rating_n = ''.join(filter(lambda x: x.isdigit(), amazon_item.s_rating_n))
+        try:
+            # List of fields to process with get_digits function
+            digit_fields = [
+                's_rating_avg',
+                's_rating_n',
+                's_price',
+                's_price_strike',
+                's_left_in_stock',
+                's_other_price_min',
+                's_other_n',
+                'sb_bought_last_month',
+                'p_review_1_rating',
+                'p_review_2_rating',
+                'p_review_3_rating',
+            ]
 
-        # Transform the price
-        if amazon_item.s_price is not None:
-            amazon_item.s_price = self.get_digits(amazon_item.s_price)
-        if amazon_item.s_price_strike is not None:
-            amazon_item.s_price_strike = self.get_digits(amazon_item.s_price_strike)
+            # Process fields that require digit extraction
+            for field in digit_fields:
+                if getattr(amazon_item, field) is not None:
+                    setattr(amazon_item, field, self.get_digits(getattr(amazon_item, field)))
 
-        # Transform left in stock
-        if amazon_item.s_left_in_stock is not None:
-            amazon_item.s_left_in_stock = self.get_digits(amazon_item.s_left_in_stock)
+            # Special handling for badge type
+            if amazon_item.sb_status_prop is not None:
+                amazon_item.sb_status_prop = json.loads(amazon_item.sb_status_prop)["badgeType"]
 
-        # Transform the other offers
-        if amazon_item.s_other_price_min is not None:
-            amazon_item.s_other_price_min = self.get_digits(amazon_item.s_other_price_min)
-        if amazon_item.s_other_n is not None:
-            amazon_item.s_other_n = self.get_digits(amazon_item.s_other_n)
+            # Special handling for best seller rank
+            if amazon_item.p_bestseller_rank is not None:
+                bsr_str = amazon_item.p_bestseller_rank
+                doc = document_fromstring(bsr_str)
+                amazon_item.p_bestseller_rank = doc.text_content().strip()
 
-        # Transform the badge type
-        if amazon_item.sb_status_prop is not None:
-            amazon_item.sb_status_prop = json.loads(amazon_item.sb_status_prop)["badgeType"]
+            # Ensure ASIN is present
+            if not amazon_item.asin:
+                raise DropItem("Missing ASIN in item")
 
-        # Transform bought last month
-        if amazon_item.sb_bought_last_month is not None:
-            amazon_item.sb_bought_last_month = self.get_digits(amazon_item.sb_bought_last_month)
-
-        # Transform the best seller rank
-        if amazon_item.p_bestseller_rank is not None:
-            bsr_str = amazon_item.p_bestseller_rank
-            doc = document_fromstring(bsr_str)
-            amazon_item.p_bestseller_rank = doc.text_content().strip()
-
-        # Transform the p_review_*_rating
-        if amazon_item.p_review_1_rating is not None:
-            amazon_item.p_review_1_rating = self.get_digits(amazon_item.p_review_1_rating)
-        if amazon_item.p_review_2_rating is not None:
-            amazon_item.p_review_2_rating = self.get_digits(amazon_item.p_review_2_rating)
-        if amazon_item.p_review_3_rating is not None:
-            amazon_item.p_review_3_rating = self.get_digits(amazon_item.p_review_3_rating)
+        except Exception as e:
+            logging.error(f"Error processing item: {e}")
+            raise DropItem(f"Error processing item: {e}")
 
         return amazon_item
 
@@ -79,10 +73,12 @@ class AmazonItemPipeline:
 
 
 class SQLitePipeline:
-    def __init__(self):
+    def __init__(self) -> None:
         self.con = sqlite3.connect('../res/amazescrape.db')
         self.cur = self.con.cursor()
+        self.create_table()
 
+    def create_table(self) -> None:
         # Create table with fields corresponding to AmazonItem
         self.cur.execute(
             """
@@ -139,70 +135,73 @@ class SQLitePipeline:
             """
         )
 
-    def process_item(self, item, spider):
-        # Serialize list and datetime fields
-        image_urls = ','.join(item.image_urls) if item.image_urls else None
-        s_timestamp = item.s_timestamp.isoformat() if item.s_timestamp else None
-        p_timestamp = item.p_timestamp.isoformat() if item.p_timestamp else None
+    def process_item(self, amazon_item: AmazonItem, spider: AmazonSpider) -> AmazonItem:
+        try:
+            # Serialize list and datetime fields
+            s_timestamp = amazon_item.s_timestamp.isoformat() if amazon_item.s_timestamp else None
+            p_timestamp = amazon_item.p_timestamp.isoformat() if amazon_item.p_timestamp else None
 
-        self.cur.execute(
-            """
-            INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                item.prefix,
-                item.suffix,
-                item.url,
-                s_timestamp,
-                item.asin,
-                item.name,
-                item.image_filename,
-                item.s_display,
-                item.s_rating_avg,
-                item.s_rating_n,
-                item.s_price,
-                item.s_price_strike,
-                item.s_rank,
-                item.s_delivery,
-                item.s_left_in_stock,
-                item.s_other_price_min,
-                item.s_other_n,
-                item.sb_status_prop,
-                item.sb_status_text,
-                item.sb_sponsored,
-                item.sb_bought_last_month,
-                item.sb_lightning_deal,
-                item.sb_promotion,
-                item.sb_prime,
-                item.sb_coupon,
-                item.sb_other_01,
-                item.sb_other_02,
-                item.sb_other_03,
-                item.p_url,
-                p_timestamp,
-                item.p_fulfiller_name,
-                item.p_merchant_id,
-                item.p_merchant_name,
-                item.p_bestseller_rank,
-                item.p_rating_1_star,
-                item.p_rating_2_star,
-                item.p_rating_3_star,
-                item.p_rating_4_star,
-                item.p_rating_5_star,
-                item.p_review_1_rating,
-                item.p_review_1_title,
-                item.p_review_1_text,
-                item.p_review_2_rating,
-                item.p_review_2_title,
-                item.p_review_2_text,
-                item.p_review_3_rating,
-                item.p_review_3_title,
-                item.p_review_3_text,
-            ),
-        )
+            self.cur.execute(
+                """
+                INSERT INTO amazon_items VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    amazon_item.prefix,
+                    amazon_item.suffix,
+                    amazon_item.url,
+                    s_timestamp,
+                    amazon_item.asin,
+                    amazon_item.name,
+                    amazon_item.image_filename,
+                    amazon_item.s_display,
+                    amazon_item.s_rating_avg,
+                    amazon_item.s_rating_n,
+                    amazon_item.s_price,
+                    amazon_item.s_price_strike,
+                    amazon_item.s_rank,
+                    amazon_item.s_delivery,
+                    amazon_item.s_left_in_stock,
+                    amazon_item.s_other_price_min,
+                    amazon_item.s_other_n,
+                    amazon_item.sb_status_prop,
+                    amazon_item.sb_status_text,
+                    amazon_item.sb_sponsored,
+                    amazon_item.sb_bought_last_month,
+                    amazon_item.sb_lightning_deal,
+                    amazon_item.sb_promotion,
+                    amazon_item.sb_prime,
+                    amazon_item.sb_coupon,
+                    amazon_item.sb_other_01,
+                    amazon_item.sb_other_02,
+                    amazon_item.sb_other_03,
+                    amazon_item.p_url,
+                    p_timestamp,
+                    amazon_item.p_fulfiller_name,
+                    amazon_item.p_merchant_id,
+                    amazon_item.p_merchant_name,
+                    amazon_item.p_bestseller_rank,
+                    amazon_item.p_rating_1_star,
+                    amazon_item.p_rating_2_star,
+                    amazon_item.p_rating_3_star,
+                    amazon_item.p_rating_4_star,
+                    amazon_item.p_rating_5_star,
+                    amazon_item.p_review_1_rating,
+                    amazon_item.p_review_1_title,
+                    amazon_item.p_review_1_text,
+                    amazon_item.p_review_2_rating,
+                    amazon_item.p_review_2_title,
+                    amazon_item.p_review_2_text,
+                    amazon_item.p_review_3_rating,
+                    amazon_item.p_review_3_title,
+                    amazon_item.p_review_3_text,
+                ),
+            )
+            self.con.commit()
+        except sqlite3.DatabaseError as e:
+            logging.error(f"Error inserting item into database: {e}")
+            raise DropItem(f"Error inserting item into database: {e}")
 
-        self.con.commit()
-        return item
+        return amazon_item
 
-    def close_spider(self, spider):
+    def close_spider(self, spider: AmazonSpider) -> None:
         self.con.close()
